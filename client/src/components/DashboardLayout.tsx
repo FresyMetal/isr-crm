@@ -27,9 +27,15 @@ import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
 import { Button } from "./ui/button";
 
+import { FileText, AlertCircle, Phone, TrendingUp } from "lucide-react";
+
 const menuItems = [
-  { icon: LayoutDashboard, label: "Page 1", path: "/" },
-  { icon: Users, label: "Page 2", path: "/some-path" },
+  { icon: TrendingUp, label: "Dashboard", path: "/" },
+  { icon: Users, label: "Clientes", path: "/clientes" },
+  { icon: LayoutDashboard, label: "Planes", path: "/planes" },
+  { icon: FileText, label: "Facturas", path: "/facturas" },
+  { icon: AlertCircle, label: "Tickets", path: "/tickets" },
+  { icon: Phone, label: "Leads", path: "/leads" },
 ];
 
 const SIDEBAR_WIDTH_KEY = "sidebar-width";

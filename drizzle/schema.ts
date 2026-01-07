@@ -1,22 +1,22 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, decimal, boolean, index } from "drizzle-orm/mysql-core";
+import { relations } from "drizzle-orm";
 
 /**
- * Core user table backing auth flow.
- * Extend this file with additional tables as your product grows.
- * Columns use camelCase to match both database fields and generated types.
+ * ISR CRM - Esquema de Base de Datos
+ * Sistema integral para gestión de operador de telecomunicaciones
  */
+
+// ============================================================================
+// USUARIOS Y AUTENTICACIÓN
+// ============================================================================
+
 export const users = mysqlTable("users", {
-  /**
-   * Surrogate primary key. Auto-incremented numeric value managed by the database.
-   * Use this for relations between tables.
-   */
   id: int("id").autoincrement().primaryKey(),
-  /** Manus OAuth identifier (openId) returned from the OAuth callback. Unique per user. */
   openId: varchar("openId", { length: 64 }).notNull().unique(),
   name: text("name"),
   email: varchar("email", { length: 320 }),
   loginMethod: varchar("loginMethod", { length: 64 }),
-  role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
+  role: mysqlEnum("role", ["user", "admin", "tecnico", "comercial"]).default("user").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
@@ -25,4 +25,495 @@ export const users = mysqlTable("users", {
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
-// TODO: Add your tables here
+// ============================================================================
+// CLIENTES
+// ============================================================================
+
+export const clientes = mysqlTable("clientes", {
+  id: int("id").autoincrement().primaryKey(),
+  
+  // Datos personales
+  nombre: varchar("nombre", { length: 255 }).notNull(),
+  apellidos: varchar("apellidos", { length: 255 }),
+  dni: varchar("dni", { length: 20 }),
+  email: varchar("email", { length: 320 }),
+  telefono: varchar("telefono", { length: 20 }),
+  telefonoAlternativo: varchar("telefono_alternativo", { length: 20 }),
+  
+  // Dirección de instalación
+  direccion: text("direccion").notNull(),
+  codigoPostal: varchar("codigo_postal", { length: 10 }),
+  localidad: varchar("localidad", { length: 255 }).notNull(),
+  provincia: varchar("provincia", { length: 255 }),
+  
+  // Datos de facturación (si diferentes)
+  direccionFacturacion: text("direccion_facturacion"),
+  
+  // Datos técnicos GPON
+  numeroSerieONT: varchar("numero_serie_ont", { length: 50 }).unique(),
+  macONT: varchar("mac_ont", { length: 20 }),
+  modeloONT: varchar("modelo_ont", { length: 100 }),
+  perfilVelocidad: varchar("perfil_velocidad", { length: 100 }),
+  perfilUsuario: varchar("perfil_usuario", { length: 100 }),
+  olt: varchar("olt", { length: 100 }),
+  pon: varchar("pon", { length: 50 }),
+  vlan: varchar("vlan", { length: 20 }),
+  ipFija: varchar("ip_fija", { length: 45 }),
+  
+  // Estado del servicio
+  estado: mysqlEnum("estado", ["activo", "suspendido", "baja", "pendiente_instalacion"]).default("pendiente_instalacion").notNull(),
+  motivoSuspension: text("motivo_suspension"),
+  fechaAlta: timestamp("fecha_alta").defaultNow().notNull(),
+  fechaBaja: timestamp("fecha_baja"),
+  motivoBaja: text("motivo_baja"),
+  
+  // Datos contractuales
+  planId: int("plan_id"),
+  fechaInstalacion: timestamp("fecha_instalacion"),
+  observaciones: text("observaciones"),
+  
+  // Metadatos
+  creadoPor: int("creado_por"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+}, (table) => ({
+  estadoIdx: index("estado_idx").on(table.estado),
+  localidadIdx: index("localidad_idx").on(table.localidad),
+  dniIdx: index("dni_idx").on(table.dni),
+}));
+
+export type Cliente = typeof clientes.$inferSelect;
+export type InsertCliente = typeof clientes.$inferInsert;
+
+// ============================================================================
+// PLANES Y SERVICIOS
+// ============================================================================
+
+export const planes = mysqlTable("planes", {
+  id: int("id").autoincrement().primaryKey(),
+  
+  // Información del plan
+  nombre: varchar("nombre", { length: 255 }).notNull(),
+  descripcion: text("descripcion"),
+  tipo: mysqlEnum("tipo", ["fibra", "movil", "tv", "telefonia_fija", "combo"]).notNull(),
+  
+  // Características técnicas
+  velocidadBajada: int("velocidad_bajada"), // Mbps
+  velocidadSubida: int("velocidad_subida"), // Mbps
+  datosMoviles: int("datos_moviles"), // GB
+  minutosLlamadas: int("minutos_llamadas"),
+  canalesTV: int("canales_tv"),
+  
+  // Mapeo a PSO Anvimur
+  perfilVelocidadPSO: varchar("perfil_velocidad_pso", { length: 100 }),
+  perfilUsuarioPSO: varchar("perfil_usuario_pso", { length: 100 }),
+  
+  // Precios
+  precioMensual: decimal("precio_mensual", { precision: 10, scale: 2 }).notNull(),
+  precioInstalacion: decimal("precio_instalacion", { precision: 10, scale: 2 }).default("0.00"),
+  precioPromocion: decimal("precio_promocion", { precision: 10, scale: 2 }),
+  mesesPromocion: int("meses_promocion"),
+  
+  // Estado
+  activo: boolean("activo").default(true).notNull(),
+  destacado: boolean("destacado").default(false),
+  
+  // Metadatos
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Plan = typeof planes.$inferSelect;
+export type InsertPlan = typeof planes.$inferInsert;
+
+// ============================================================================
+// SERVICIOS CONTRATADOS POR CLIENTE
+// ============================================================================
+
+export const serviciosCliente = mysqlTable("servicios_cliente", {
+  id: int("id").autoincrement().primaryKey(),
+  clienteId: int("cliente_id").notNull(),
+  planId: int("plan_id").notNull(),
+  
+  // Fechas
+  fechaInicio: timestamp("fecha_inicio").defaultNow().notNull(),
+  fechaFin: timestamp("fecha_fin"),
+  
+  // Precio aplicado (puede diferir del plan por promociones)
+  precioMensual: decimal("precio_mensual", { precision: 10, scale: 2 }).notNull(),
+  
+  // Estado
+  activo: boolean("activo").default(true).notNull(),
+  
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+}, (table) => ({
+  clienteIdx: index("cliente_idx").on(table.clienteId),
+  planIdx: index("plan_idx").on(table.planId),
+}));
+
+export type ServicioCliente = typeof serviciosCliente.$inferSelect;
+export type InsertServicioCliente = typeof serviciosCliente.$inferInsert;
+
+// ============================================================================
+// FACTURACIÓN
+// ============================================================================
+
+export const facturas = mysqlTable("facturas", {
+  id: int("id").autoincrement().primaryKey(),
+  clienteId: int("cliente_id").notNull(),
+  
+  // Datos de la factura
+  numeroFactura: varchar("numero_factura", { length: 50 }).notNull().unique(),
+  fechaEmision: timestamp("fecha_emision").defaultNow().notNull(),
+  fechaVencimiento: timestamp("fecha_vencimiento").notNull(),
+  periodoDesde: timestamp("periodo_desde").notNull(),
+  periodoHasta: timestamp("periodo_hasta").notNull(),
+  
+  // Importes
+  subtotal: decimal("subtotal", { precision: 10, scale: 2 }).notNull(),
+  iva: decimal("iva", { precision: 10, scale: 2 }).notNull(),
+  total: decimal("total", { precision: 10, scale: 2 }).notNull(),
+  
+  // Estado
+  estado: mysqlEnum("estado", ["pendiente", "pagada", "vencida", "anulada"]).default("pendiente").notNull(),
+  fechaPago: timestamp("fecha_pago"),
+  metodoPago: varchar("metodo_pago", { length: 50 }),
+  
+  // Observaciones
+  observaciones: text("observaciones"),
+  
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+}, (table) => ({
+  clienteIdx: index("cliente_idx").on(table.clienteId),
+  estadoIdx: index("estado_idx").on(table.estado),
+  fechaEmisionIdx: index("fecha_emision_idx").on(table.fechaEmision),
+}));
+
+export type Factura = typeof facturas.$inferSelect;
+export type InsertFactura = typeof facturas.$inferInsert;
+
+export const conceptosFactura = mysqlTable("conceptos_factura", {
+  id: int("id").autoincrement().primaryKey(),
+  facturaId: int("factura_id").notNull(),
+  
+  descripcion: varchar("descripcion", { length: 255 }).notNull(),
+  cantidad: int("cantidad").default(1).notNull(),
+  precioUnitario: decimal("precio_unitario", { precision: 10, scale: 2 }).notNull(),
+  subtotal: decimal("subtotal", { precision: 10, scale: 2 }).notNull(),
+  
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  facturaIdx: index("factura_idx").on(table.facturaId),
+}));
+
+export type ConceptoFactura = typeof conceptosFactura.$inferSelect;
+export type InsertConceptoFactura = typeof conceptosFactura.$inferInsert;
+
+export const pagos = mysqlTable("pagos", {
+  id: int("id").autoincrement().primaryKey(),
+  facturaId: int("factura_id").notNull(),
+  clienteId: int("cliente_id").notNull(),
+  
+  importe: decimal("importe", { precision: 10, scale: 2 }).notNull(),
+  fechaPago: timestamp("fecha_pago").defaultNow().notNull(),
+  metodoPago: varchar("metodo_pago", { length: 50 }).notNull(),
+  referencia: varchar("referencia", { length: 100 }),
+  
+  observaciones: text("observaciones"),
+  
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  facturaIdx: index("factura_idx").on(table.facturaId),
+  clienteIdx: index("cliente_idx").on(table.clienteId),
+}));
+
+export type Pago = typeof pagos.$inferSelect;
+export type InsertPago = typeof pagos.$inferInsert;
+
+// ============================================================================
+// SOPORTE TÉCNICO
+// ============================================================================
+
+export const tickets = mysqlTable("tickets", {
+  id: int("id").autoincrement().primaryKey(),
+  clienteId: int("cliente_id").notNull(),
+  
+  // Datos del ticket
+  numeroTicket: varchar("numero_ticket", { length: 50 }).notNull().unique(),
+  asunto: varchar("asunto", { length: 255 }).notNull(),
+  descripcion: text("descripcion").notNull(),
+  
+  // Clasificación
+  tipo: mysqlEnum("tipo", ["averia", "consulta", "instalacion", "cambio_servicio", "baja", "otro"]).notNull(),
+  prioridad: mysqlEnum("prioridad", ["baja", "media", "alta", "urgente"]).default("media").notNull(),
+  
+  // Estado y asignación
+  estado: mysqlEnum("estado", ["abierto", "en_proceso", "pendiente_cliente", "resuelto", "cerrado"]).default("abierto").notNull(),
+  asignadoA: int("asignado_a"),
+  
+  // Fechas
+  fechaApertura: timestamp("fecha_apertura").defaultNow().notNull(),
+  fechaCierre: timestamp("fecha_cierre"),
+  
+  // Resolución
+  solucion: text("solucion"),
+  tiempoResolucion: int("tiempo_resolucion"), // minutos
+  
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+}, (table) => ({
+  clienteIdx: index("cliente_idx").on(table.clienteId),
+  estadoIdx: index("estado_idx").on(table.estado),
+  asignadoIdx: index("asignado_idx").on(table.asignadoA),
+}));
+
+export type Ticket = typeof tickets.$inferSelect;
+export type InsertTicket = typeof tickets.$inferInsert;
+
+export const comentariosTicket = mysqlTable("comentarios_ticket", {
+  id: int("id").autoincrement().primaryKey(),
+  ticketId: int("ticket_id").notNull(),
+  usuarioId: int("usuario_id").notNull(),
+  
+  comentario: text("comentario").notNull(),
+  interno: boolean("interno").default(false), // Si es visible solo para técnicos
+  
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  ticketIdx: index("ticket_idx").on(table.ticketId),
+}));
+
+export type ComentarioTicket = typeof comentariosTicket.$inferSelect;
+export type InsertComentarioTicket = typeof comentariosTicket.$inferInsert;
+
+// ============================================================================
+// MARKETING Y VENTAS
+// ============================================================================
+
+export const leads = mysqlTable("leads", {
+  id: int("id").autoincrement().primaryKey(),
+  
+  // Datos del prospecto
+  nombre: varchar("nombre", { length: 255 }).notNull(),
+  apellidos: varchar("apellidos", { length: 255 }),
+  email: varchar("email", { length: 320 }),
+  telefono: varchar("telefono", { length: 20 }),
+  direccion: text("direccion"),
+  localidad: varchar("localidad", { length: 255 }),
+  
+  // Origen y clasificación
+  fuente: varchar("fuente", { length: 100 }), // web, telefono, referido, etc.
+  estado: mysqlEnum("estado", ["nuevo", "contactado", "calificado", "propuesta", "ganado", "perdido"]).default("nuevo").notNull(),
+  interes: mysqlEnum("interes", ["bajo", "medio", "alto"]).default("medio"),
+  
+  // Seguimiento comercial
+  asignadoA: int("asignado_a"),
+  planInteres: int("plan_interes"),
+  observaciones: text("observaciones"),
+  
+  // Conversión
+  convertidoClienteId: int("convertido_cliente_id"),
+  fechaConversion: timestamp("fecha_conversion"),
+  
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+}, (table) => ({
+  estadoIdx: index("estado_idx").on(table.estado),
+  asignadoIdx: index("asignado_idx").on(table.asignadoA),
+}));
+
+export type Lead = typeof leads.$inferSelect;
+export type InsertLead = typeof leads.$inferInsert;
+
+export const campanas = mysqlTable("campanas", {
+  id: int("id").autoincrement().primaryKey(),
+  
+  nombre: varchar("nombre", { length: 255 }).notNull(),
+  descripcion: text("descripcion"),
+  tipo: varchar("tipo", { length: 100 }), // email, sms, redes_sociales, puerta_a_puerta
+  
+  fechaInicio: timestamp("fecha_inicio").notNull(),
+  fechaFin: timestamp("fecha_fin"),
+  
+  presupuesto: decimal("presupuesto", { precision: 10, scale: 2 }),
+  leadsGenerados: int("leads_generados").default(0),
+  clientesConvertidos: int("clientes_convertidos").default(0),
+  
+  activa: boolean("activa").default(true),
+  
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Campana = typeof campanas.$inferSelect;
+export type InsertCampana = typeof campanas.$inferInsert;
+
+// ============================================================================
+// LOGS Y AUDITORÍA
+// ============================================================================
+
+export const logsPSO = mysqlTable("logs_pso", {
+  id: int("id").autoincrement().primaryKey(),
+  
+  clienteId: int("cliente_id"),
+  operacion: varchar("operacion", { length: 100 }).notNull(), // añadir_ont, eliminar_ont, modificar_ont, etc.
+  
+  // Request
+  requestPayload: text("request_payload"),
+  
+  // Response
+  codigoRespuesta: int("codigo_respuesta"),
+  respuesta: text("respuesta"),
+  exitoso: boolean("exitoso").notNull(),
+  
+  // Error handling
+  mensajeError: text("mensaje_error"),
+  intentos: int("intentos").default(1),
+  
+  usuarioId: int("usuario_id"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  clienteIdx: index("cliente_idx").on(table.clienteId),
+  operacionIdx: index("operacion_idx").on(table.operacion),
+  fechaIdx: index("fecha_idx").on(table.createdAt),
+}));
+
+export type LogPSO = typeof logsPSO.$inferSelect;
+export type InsertLogPSO = typeof logsPSO.$inferInsert;
+
+export const actividadCliente = mysqlTable("actividad_cliente", {
+  id: int("id").autoincrement().primaryKey(),
+  
+  clienteId: int("cliente_id").notNull(),
+  usuarioId: int("usuario_id"),
+  
+  tipo: varchar("tipo", { length: 100 }).notNull(), // cambio_plan, suspension, pago, contacto, etc.
+  descripcion: text("descripcion").notNull(),
+  
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  clienteIdx: index("cliente_idx").on(table.clienteId),
+  fechaIdx: index("fecha_idx").on(table.createdAt),
+}));
+
+export type ActividadCliente = typeof actividadCliente.$inferSelect;
+export type InsertActividadCliente = typeof actividadCliente.$inferInsert;
+
+// ============================================================================
+// RELACIONES
+// ============================================================================
+
+export const clientesRelations = relations(clientes, ({ one, many }) => ({
+  plan: one(planes, {
+    fields: [clientes.planId],
+    references: [planes.id],
+  }),
+  servicios: many(serviciosCliente),
+  facturas: many(facturas),
+  tickets: many(tickets),
+  actividades: many(actividadCliente),
+  creadoPorUsuario: one(users, {
+    fields: [clientes.creadoPor],
+    references: [users.id],
+  }),
+}));
+
+export const serviciosClienteRelations = relations(serviciosCliente, ({ one }) => ({
+  cliente: one(clientes, {
+    fields: [serviciosCliente.clienteId],
+    references: [clientes.id],
+  }),
+  plan: one(planes, {
+    fields: [serviciosCliente.planId],
+    references: [planes.id],
+  }),
+}));
+
+export const facturasRelations = relations(facturas, ({ one, many }) => ({
+  cliente: one(clientes, {
+    fields: [facturas.clienteId],
+    references: [clientes.id],
+  }),
+  conceptos: many(conceptosFactura),
+  pagos: many(pagos),
+}));
+
+export const conceptosFacturaRelations = relations(conceptosFactura, ({ one }) => ({
+  factura: one(facturas, {
+    fields: [conceptosFactura.facturaId],
+    references: [facturas.id],
+  }),
+}));
+
+export const pagosRelations = relations(pagos, ({ one }) => ({
+  factura: one(facturas, {
+    fields: [pagos.facturaId],
+    references: [facturas.id],
+  }),
+  cliente: one(clientes, {
+    fields: [pagos.clienteId],
+    references: [clientes.id],
+  }),
+}));
+
+export const ticketsRelations = relations(tickets, ({ one, many }) => ({
+  cliente: one(clientes, {
+    fields: [tickets.clienteId],
+    references: [clientes.id],
+  }),
+  asignado: one(users, {
+    fields: [tickets.asignadoA],
+    references: [users.id],
+  }),
+  comentarios: many(comentariosTicket),
+}));
+
+export const comentariosTicketRelations = relations(comentariosTicket, ({ one }) => ({
+  ticket: one(tickets, {
+    fields: [comentariosTicket.ticketId],
+    references: [tickets.id],
+  }),
+  usuario: one(users, {
+    fields: [comentariosTicket.usuarioId],
+    references: [users.id],
+  }),
+}));
+
+export const leadsRelations = relations(leads, ({ one }) => ({
+  asignado: one(users, {
+    fields: [leads.asignadoA],
+    references: [users.id],
+  }),
+  planInteresado: one(planes, {
+    fields: [leads.planInteres],
+    references: [planes.id],
+  }),
+  clienteConvertido: one(clientes, {
+    fields: [leads.convertidoClienteId],
+    references: [clientes.id],
+  }),
+}));
+
+export const logsPSORelations = relations(logsPSO, ({ one }) => ({
+  cliente: one(clientes, {
+    fields: [logsPSO.clienteId],
+    references: [clientes.id],
+  }),
+  usuario: one(users, {
+    fields: [logsPSO.usuarioId],
+    references: [users.id],
+  }),
+}));
+
+export const actividadClienteRelations = relations(actividadCliente, ({ one }) => ({
+  cliente: one(clientes, {
+    fields: [actividadCliente.clienteId],
+    references: [clientes.id],
+  }),
+  usuario: one(users, {
+    fields: [actividadCliente.usuarioId],
+    references: [users.id],
+  }),
+}));
