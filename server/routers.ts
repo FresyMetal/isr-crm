@@ -6,6 +6,7 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import * as db from "./db";
 import { getPSOClient, PSOClient } from "./pso-client";
+import { generarFacturaCliente, generarFacturasDelMes, obtenerProximoMesFacturacion } from "./billing-service";
 
 // ============================================================================
 // MIDDLEWARE PARA ADMIN
@@ -454,6 +455,35 @@ const facturasRouter = router({
       });
 
       return { success: true };
+    }),
+
+  generarFacturas: adminProcedure
+    .input(z.object({
+      mes: z.number().min(1).max(12),
+      anio: z.number().min(2000),
+    }))
+    .mutation(async ({ input }) => {
+      const resultado = await generarFacturasDelMes(input.mes, input.anio);
+      return resultado;
+    }),
+
+  generarFacturaCliente: adminProcedure
+    .input(z.object({
+      clienteId: z.number(),
+      mes: z.number().min(1).max(12),
+      anio: z.number().min(2000),
+    }))
+    .mutation(async ({ input }) => {
+      const resultado = await generarFacturaCliente(input.clienteId, input.mes, input.anio);
+      if (!resultado.exitosa) {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: resultado.error || 'Error generando factura' });
+      }
+      return resultado;
+    }),
+
+  obtenerProximoMes: protectedProcedure
+    .query(() => {
+      return obtenerProximoMesFacturacion();
     }),
 });
 

@@ -124,3 +124,14 @@
 - [ ] Manual de usuario del CRM
 - [ ] Guía de instalación y configuración
 - [ ] Documentación técnica de arquitectura
+
+
+## Facturación Automática (Nueva Funcionalidad)
+- [x] Función de generación de facturas para cliente individual
+- [x] Función de generación de facturas para todos los clientes activos
+- [x] Cálculo automático de conceptos facturables basados en planes
+- [x] Trabajo programado (cron) para generar facturas el 1º de cada mes
+- [x] Notificación al propietario cuando se generen facturas
+- [x] Procedimiento tRPC para generar facturas manualmente
+- [x] Página de gestión de facturación automática
+- [x] Tests unitarios de generación de facturas
