@@ -7,6 +7,7 @@ import { z } from "zod";
 import * as db from "./db";
 import { getPSOClient, PSOClient } from "./pso-client";
 import { generarFacturaCliente, generarFacturasDelMes, obtenerProximoMesFacturacion } from "./billing-service";
+import { invoiceDeliveryRouter } from "./invoice-delivery-router";
 
 // ============================================================================
 // MIDDLEWARE PARA ADMIN
@@ -748,6 +749,7 @@ export const appRouter = router({
   clientes: clientesRouter,
   planes: planesRouter,
   facturas: facturasRouter,
+  invoiceDelivery: invoiceDeliveryRouter,
   tickets: ticketsRouter,
   leads: leadsRouter,
   dashboard: dashboardRouter,

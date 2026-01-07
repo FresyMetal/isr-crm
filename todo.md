@@ -135,3 +135,16 @@
 - [x] Procedimiento tRPC para generar facturas manualmente
 - [x] Página de gestión de facturación automática
 - [x] Tests unitarios de generación de facturas
+
+
+## Facturas en PDF y Email (Nueva Funcionalidad)
+- [x] Generar facturas en formato PDF profesional
+- [x] Almacenar PDFs en S3
+- [x] Configurar servicio de email
+- [x] Enviar facturas por email automáticamente
+- [x] Opción para reenviar facturas manualmente
+- [x] Template de email profesional
+- [x] Tests de generación de PDF
+- [x] Tests de envío de email
+- [x] Interfaz de usuario para entrega de facturas
+- [x] Procedimientos tRPC para entrega
