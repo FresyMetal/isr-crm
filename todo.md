@@ -148,3 +148,14 @@
 - [x] Tests de envío de email
 - [x] Interfaz de usuario para entrega de facturas
 - [x] Procedimientos tRPC para entrega
+
+
+## Mejoras de Planes y Clientes (Nueva Solicitud)
+- [x] Agregar campo número de cuenta en tabla clientes
+- [x] Implementar CRUD completo de planes (crear, editar, eliminar)
+- [x] Contador de clientes por plan
+- [x] Asignación de plan a cliente desde ficha
+- [x] Precio personalizado por cliente
+- [x] Interfaz de gestión de planes mejorada
+- [x] Validaciones de eliminación de planes
+- [x] Tests de CRUD de planes (8 tests pasando)

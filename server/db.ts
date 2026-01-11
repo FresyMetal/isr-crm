@@ -129,7 +129,20 @@ export async function getClienteById(id: number) {
   if (!db) return null;
   
   const result = await db.select().from(clientes).where(eq(clientes.id, id)).limit(1);
-  return result[0] || null;
+  if (!result[0]) return null;
+  
+  const cliente = result[0];
+  
+  // Si tiene plan, obtener datos del plan
+  if (cliente.planId) {
+    const planResult = await db.select().from(planes).where(eq(planes.id, cliente.planId)).limit(1);
+    return {
+      ...cliente,
+      plan: planResult[0] || null,
+    };
+  }
+  
+  return cliente;
 }
 
 export async function getClienteBySN(numeroSerieONT: string) {

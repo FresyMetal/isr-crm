@@ -69,6 +69,8 @@ export const clientes = mysqlTable("clientes", {
   
   // Datos contractuales
   planId: int("plan_id"),
+  precioMensual: decimal("precio_mensual", { precision: 10, scale: 2 }),
+  numeroCuenta: varchar("numero_cuenta", { length: 50 }),
   fechaInstalacion: timestamp("fecha_instalacion"),
   observaciones: text("observaciones"),
   

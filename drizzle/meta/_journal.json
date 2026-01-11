@@ -15,6 +15,13 @@
       "when": 1767794010882,
       "tag": "0001_legal_songbird",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1768153105073,
+      "tag": "0002_exotic_chat",
+      "breakpoints": true
     }
   ]
 }

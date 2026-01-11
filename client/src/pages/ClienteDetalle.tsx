@@ -250,6 +250,32 @@ export default function ClienteDetalle() {
 
             <Card>
               <CardHeader>
+                <CardTitle>Datos Contractuales</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Plan Contratado</p>
+                    <p className="font-medium">{(cliente as any).plan?.nombre || "-"}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Precio Mensual</p>
+                    <p className="font-medium">€{cliente.precioMensual ? Number(cliente.precioMensual).toFixed(2) : "-"}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Número de Cuenta</p>
+                    <p className="font-medium font-mono">{cliente.numeroCuenta || "-"}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Fecha de Alta</p>
+                    <p className="font-medium">{cliente.fechaAlta ? new Date(cliente.fechaAlta).toLocaleDateString() : "-"}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
                 <CardTitle>
                   <MapPin className="inline mr-2 h-5 w-5" />
                   Dirección de Instalación

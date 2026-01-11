@@ -8,6 +8,7 @@ import * as db from "./db";
 import { getPSOClient, PSOClient } from "./pso-client";
 import { generarFacturaCliente, generarFacturasDelMes, obtenerProximoMesFacturacion } from "./billing-service";
 import { invoiceDeliveryRouter } from "./invoice-delivery-router";
+import { getAllPlanesConContador, getPlanConContador, crearPlan, actualizarPlan, eliminarPlan, getPlanesActivos, getEstadisticasPlanes } from "./planes-service";
 
 // ============================================================================
 // MIDDLEWARE PARA ADMIN
@@ -329,22 +330,34 @@ const clientesRouter = router({
 // ============================================================================
 
 const planesRouter = router({
+  // Listar todos los planes con contador de clientes
   list: protectedProcedure
     .input(z.object({ activosOnly: z.boolean().optional() }).optional())
     .query(async ({ input }) => {
-      return db.getAllPlanes(input?.activosOnly);
+      if (input?.activosOnly) {
+        return getPlanesActivos();
+      }
+      return getAllPlanesConContador();
     }),
 
+  // Obtener plan por ID con contador
   getById: protectedProcedure
     .input(z.object({ id: z.number() }))
     .query(async ({ input }) => {
-      const plan = await db.getPlanById(input.id);
+      const plan = await getPlanConContador(input.id);
       if (!plan) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Plan no encontrado' });
       }
       return plan;
     }),
 
+  // Obtener estadísticas de planes
+  estadisticas: protectedProcedure
+    .query(async () => {
+      return getEstadisticasPlanes();
+    }),
+
+  // Crear nuevo plan
   create: adminProcedure
     .input(z.object({
       nombre: z.string().min(1),
@@ -365,10 +378,10 @@ const planesRouter = router({
       destacado: z.boolean().default(false),
     }))
     .mutation(async ({ input }) => {
-      await db.createPlan(input);
-      return { success: true };
+      return crearPlan(input);
     }),
 
+  // Actualizar plan
   update: adminProcedure
     .input(z.object({
       id: z.number(),
@@ -382,8 +395,14 @@ const planesRouter = router({
       }),
     }))
     .mutation(async ({ input }) => {
-      await db.updatePlan(input.id, input.data);
-      return { success: true };
+      return actualizarPlan(input.id, input.data);
+    }),
+
+  // Eliminar plan (solo si no tiene clientes)
+  delete: adminProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ input }) => {
+      return eliminarPlan(input.id);
     }),
 });
 
