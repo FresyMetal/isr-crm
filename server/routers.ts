@@ -180,6 +180,8 @@ const clientesRouter = router({
         direccion: z.string().optional(),
         localidad: z.string().optional(),
         observaciones: z.string().optional(),
+        numeroCuenta: z.string().optional(),
+        precioMensual: z.string().optional(),
       }),
     }))
     .mutation(async ({ input, ctx }) => {

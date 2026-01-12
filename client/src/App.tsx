@@ -10,14 +10,26 @@ import Home from "./pages/Home";
 import Clientes from "./pages/Clientes";
 import ClienteDetalle from "./pages/ClienteDetalle";
 import NuevoCliente from "./pages/NuevoCliente";
-import Planes from "./pages/Planes";
+import PlanesGestion from "./pages/PlanesGestion";
 import Facturas from "./pages/Facturas";
 import Tickets from "./pages/Tickets";
 import TicketDetalle from "./pages/TicketDetalle";
 import Leads from "./pages/Leads";
 import Dashboard from "./pages/Dashboard";
+import Login from "./pages/Login";
 
 function Router() {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+
+  // Si no hay token, mostrar login
+  if (!token) {
+    return (
+      <Switch>
+        <Route path={"/*"} component={Login} />
+      </Switch>
+    );
+  }
+
   return (
     <Switch>
       {/* Dashboard principal */}
@@ -29,7 +41,7 @@ function Router() {
       <Route path={"/clientes/:id"} component={ClienteDetalle} />
       
       {/* Planes y servicios */}
-      <Route path={"/planes"} component={Planes} />
+      <Route path={"/planes"} component={PlanesGestion} />
       
       {/* Facturación */}
       <Route path={"/facturas"} component={Facturas} />

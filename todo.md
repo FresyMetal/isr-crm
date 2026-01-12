@@ -159,3 +159,11 @@
 - [x] Interfaz de gestión de planes mejorada
 - [x] Validaciones de eliminación de planes
 - [x] Tests de CRUD de planes (8 tests pasando)
+
+
+## Correcciones Solicitadas (Urgente)
+- [x] Verificar y corregir CRUD de planes (crear/editar no funciona) - Ruta /planes ahora usa PlanesGestion
+- [x] Añadir campo editable de número de cuenta en ficha de cliente - Campo editable implementado
+- [x] Cambiar autenticación de OAuth a usuario/contraseña simple - Endpoints de login creados
+- [x] Crear página de login personalizado - Login.tsx creado
+- [ ] Verificar que todos los formularios funcionan correctamente

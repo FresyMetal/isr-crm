@@ -40,6 +40,8 @@ export default function ClienteDetalle() {
   const clienteId = parseInt(id);
   const [motivoSuspension, setMotivoSuspension] = useState("");
   const [motivoBaja, setMotivoBaja] = useState("");
+  const [editandoCuenta, setEditandoCuenta] = useState(false);
+  const [numeroCuenta, setNumeroCuenta] = useState("");
 
   const utils = trpc.useUtils();
   const { data: cliente, isLoading } = trpc.clientes.getById.useQuery({ id: clienteId });
@@ -67,6 +69,16 @@ export default function ClienteDetalle() {
       toast.success("Cliente dado de baja correctamente");
       utils.clientes.getById.invalidate({ id: clienteId });
       setMotivoBaja("");
+    },
+    onError: (error) => toast.error(`Error: ${error.message}`),
+  });
+
+  const updateCuentaMutation = trpc.clientes.update.useMutation({
+    onSuccess: () => {
+      toast.success("Número de cuenta actualizado");
+      utils.clientes.getById.invalidate({ id: clienteId });
+      setEditandoCuenta(false);
+      setNumeroCuenta("");
     },
     onError: (error) => toast.error(`Error: ${error.message}`),
   });
@@ -264,7 +276,50 @@ export default function ClienteDetalle() {
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Número de Cuenta</p>
-                    <p className="font-medium font-mono">{cliente.numeroCuenta || "-"}</p>
+                    {editandoCuenta ? (
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={numeroCuenta}
+                          onChange={(e) => setNumeroCuenta(e.target.value)}
+                          placeholder="Ej: ES9121000418450200051332"
+                          className="flex-1 px-2 py-1 border rounded text-sm"
+                        />
+                        <Button
+                          size="sm"
+                          onClick={() => {
+                            updateCuentaMutation.mutate({ id: clienteId, data: { numeroCuenta } });
+                          }}
+                          disabled={updateCuentaMutation.isPending}
+                        >
+                          Guardar
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setEditandoCuenta(false);
+                            setNumeroCuenta("");
+                          }}
+                        >
+                          Cancelar
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="flex justify-between items-center">
+                        <p className="font-medium font-mono">{cliente.numeroCuenta || "-"}</p>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setEditandoCuenta(true);
+                            setNumeroCuenta(cliente.numeroCuenta || "");
+                          }}
+                        >
+                          Editar
+                        </Button>
+                      </div>
+                    )}
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Fecha de Alta</p>
