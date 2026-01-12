@@ -23,6 +23,8 @@ export default function Login() {
     setIsLoading(true);
 
     try {
+      console.log("Enviando login request:", { username, password });
+      
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: {
@@ -31,20 +33,27 @@ export default function Login() {
         body: JSON.stringify({ username, password }),
       });
 
+      console.log("Response status:", response.status);
+      const data = await response.json();
+      console.log("Response data:", data);
+
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Error al iniciar sesión");
+        throw new Error(data.message || "Error al iniciar sesión");
       }
 
-      const data = await response.json();
-      
       // Guardar token en localStorage
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
       
+      console.log("Login exitoso, redirigiendo...");
       toast.success("Sesión iniciada correctamente");
-      setLocation("/");
+      
+      // Forzar recarga para que App.tsx vea el token
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 500);
     } catch (error: any) {
+      console.error("Error en login:", error);
       toast.error(error.message || "Error al iniciar sesión");
     } finally {
       setIsLoading(false);
@@ -75,6 +84,7 @@ export default function Login() {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   disabled={isLoading}
+                  autoComplete="username"
                 />
               </div>
 
@@ -86,6 +96,7 @@ export default function Login() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={isLoading}
+                  autoComplete="current-password"
                 />
               </div>
 

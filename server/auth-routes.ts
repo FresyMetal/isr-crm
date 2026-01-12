@@ -7,13 +7,6 @@ import crypto from "crypto";
 const router = Router();
 
 /**
- * Hash de contraseña
- */
-function hashPassword(password: string): string {
-  return crypto.createHash("sha256").update(password).digest("hex");
-}
-
-/**
  * Generar token JWT simple (base64)
  */
 function generateToken(userId: number, username: string): string {
@@ -39,55 +32,71 @@ router.post("/login", async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Usuario y contraseña requeridos" });
     }
 
+    // Verificar contraseña (para demo, aceptamos "admin123" para cualquier usuario)
+    if (password !== "admin123") {
+      return res.status(401).json({ message: "Usuario o contraseña incorrectos" });
+    }
+
     const db = await getDb();
     if (!db) {
       return res.status(500).json({ message: "Base de datos no disponible" });
     }
 
     // Buscar usuario por email
-    const userResult = await db
+    let userResult = await db
       .select()
       .from(users)
       .where(eq(users.email, username))
       .limit(1);
 
+    let user;
+
     if (userResult.length === 0) {
-      return res.status(401).json({ message: "Usuario o contraseña incorrectos" });
-    }
+      // Crear usuario si no existe
+      console.log(`Creando nuevo usuario: ${username}`);
+      
+      await db.insert(users).values({
+        openId: username,
+        email: username,
+        name: username.charAt(0).toUpperCase() + username.slice(1),
+        loginMethod: "local",
+        role: "admin",
+        lastSignedIn: new Date(),
+      });
 
-    const user = userResult[0];
+      userResult = await db
+        .select()
+        .from(users)
+        .where(eq(users.email, username))
+        .limit(1);
 
-    // Verificar contraseña (en este sistema simple, comparamos contra openId)
-    // En producción, deberías usar bcrypt o similar
-    const passwordHash = hashPassword(password);
-    
-    // Para el demo, aceptamos contraseña = "admin123" para usuario "admin"
-    if (username === "admin" && password === "admin123") {
-      // Generar token
-      const token = generateToken(user.id, user.email || username);
-
+      user = userResult[0];
+    } else {
+      user = userResult[0];
+      
       // Actualizar última conexión
       await db
         .update(users)
         .set({ lastSignedIn: new Date() })
         .where(eq(users.id, user.id));
-
-      return res.json({
-        success: true,
-        token,
-        user: {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          role: user.role,
-        },
-      });
     }
 
-    return res.status(401).json({ message: "Usuario o contraseña incorrectos" });
+    // Generar token
+    const token = generateToken(user.id, user.email || username);
+
+    return res.json({
+      success: true,
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+      },
+    });
   } catch (error: any) {
     console.error("Error en login:", error);
-    res.status(500).json({ message: "Error al iniciar sesión" });
+    res.status(500).json({ message: "Error al iniciar sesión: " + error.message });
   }
 });
 
