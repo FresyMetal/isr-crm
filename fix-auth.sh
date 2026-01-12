@@ -131,7 +131,29 @@ export default App;
 EOF
 
 log_info "Recompilando aplicación..."
-pnpm build
+
+# Buscar pnpm en ubicaciones comunes
+if command -v pnpm &> /dev/null; then
+    PNPM_CMD="pnpm"
+elif [ -f "/root/.local/share/pnpm/pnpm" ]; then
+    PNPM_CMD="/root/.local/share/pnpm/pnpm"
+elif [ -f "$HOME/.local/share/pnpm/pnpm" ]; then
+    PNPM_CMD="$HOME/.local/share/pnpm/pnpm"
+else
+    log_error "No se encontró pnpm. Intentando con npm..."
+    if command -v npm &> /dev/null; then
+        npm run build
+    else
+        log_error "No se encontró npm ni pnpm"
+        exit 1
+    fi
+    PNPM_CMD=""
+fi
+
+if [ -n "$PNPM_CMD" ]; then
+    log_info "Usando: $PNPM_CMD"
+    $PNPM_CMD build
+fi
 
 log_info "Iniciando servicio..."
 systemctl start isr-crm.service
