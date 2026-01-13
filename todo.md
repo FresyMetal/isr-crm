@@ -243,7 +243,8 @@
 - [x] Corregir layout para usar DashboardLayout correctamente
 - [x] Probar que el menú lateral funcione en todas las páginas
 
-## Bug: Error al Iniciar Sesión (Usuario Duplicado)
+## Bug: Error al Iniciar Sesión (Usuario Duplicado) - RESUELTO
 - [x] Identificar causa del error de inserción duplicada
-- [x] Corregir lógica para usar upsert en lugar de insert
-- [x] Probar inicio de sesión múltiples veces
+- [x] Corregir lógica para buscar por openId (campo único) en lugar de email
+- [x] Eliminar usuario duplicado de la base de datos
+- [x] Probar inicio de sesión múltiples veces (2 pruebas exitosas)

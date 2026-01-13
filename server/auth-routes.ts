@@ -42,11 +42,11 @@ router.post("/login", async (req: Request, res: Response) => {
       return res.status(500).json({ message: "Base de datos no disponible" });
     }
 
-    // Buscar usuario por email
+    // Buscar usuario por openId (que es único)
     let userResult = await db
       .select()
       .from(users)
-      .where(eq(users.email, username))
+      .where(eq(users.openId, username))
       .limit(1);
 
     let user;
@@ -55,30 +55,21 @@ router.post("/login", async (req: Request, res: Response) => {
       // Crear usuario si no existe
       console.log(`Creando nuevo usuario: ${username}`);
       
-      try {
-        await db.insert(users).values({
-          openId: username,
-          email: username,
-          name: username.charAt(0).toUpperCase() + username.slice(1),
-          loginMethod: "local",
-          role: "admin",
-          lastSignedIn: new Date(),
-        });
-      } catch (insertError: any) {
-        // Si falla la inserción (posible race condition), intentar obtener el usuario nuevamente
-        console.log(`Error al insertar usuario (posiblemente ya existe): ${insertError.message}`);
-      }
+      await db.insert(users).values({
+        openId: username,
+        email: username,
+        name: username.charAt(0).toUpperCase() + username.slice(1),
+        loginMethod: "local",
+        role: "admin",
+        lastSignedIn: new Date(),
+      });
 
-      // Obtener el usuario (ya sea recién creado o existente)
+      // Obtener el usuario recién creado
       userResult = await db
         .select()
         .from(users)
-        .where(eq(users.email, username))
+        .where(eq(users.openId, username))
         .limit(1);
-
-      if (userResult.length === 0) {
-        throw new Error("No se pudo crear o encontrar el usuario");
-      }
 
       user = userResult[0];
     } else {
