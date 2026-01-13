@@ -138,6 +138,19 @@ export async function getUltimoClienteCreado(creadoPor: number) {
   return result[0] || null;
 }
 
+export async function getClienteByCodigo(codigo: string) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const result = await db
+    .select()
+    .from(clientes)
+    .where(eq(clientes.codigo, codigo))
+    .limit(1);
+  
+  return result[0] || null;
+}
+
 export async function getClienteById(id: number) {
   const db = await getDb();
   if (!db) return null;

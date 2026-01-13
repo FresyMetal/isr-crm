@@ -149,11 +149,28 @@ export default function NuevoCliente() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="codigo">Código Cliente</Label>
-                  <Input
+                  <ValidatedInput
                     id="codigo"
                     value={formData.codigo}
-                    onChange={(e) => handleChange("codigo", e.target.value)}
+                    onChange={(value) => handleChange("codigo", value)}
                     placeholder="Ej: 000003"
+                    validate={async (value: string) => {
+                      if (!value) return { isValid: true };
+                      try {
+                        const response = await fetch(`/api/trpc/clientes.checkCodigoExists?input=${encodeURIComponent(JSON.stringify({ codigo: value }))}`, {
+                          credentials: 'include'
+                        });
+                        const data = await response.json();
+                        const exists = data.result?.data?.exists;
+                        return exists 
+                          ? { isValid: false, message: "Este código ya está en uso" }
+                          : { isValid: true };
+                      } catch (err) {
+                        console.error("Error validating codigo:", err);
+                        return { isValid: true }; // En caso de error, permitir continuar
+                      }
+                    }}
+                    debounceMs={500}
                   />
                 </div>
                 <div className="space-y-2">

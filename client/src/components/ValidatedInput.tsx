@@ -1,42 +1,70 @@
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { Loader2 } from "lucide-react";
+
+interface ValidationResult {
+  isValid: boolean;
+  message?: string;
+}
 
 interface ValidatedInputProps {
   id: string;
-  label: string;
-  type?: string;
   value: string;
   onChange: (value: string) => void;
-  validate?: (value: string) => { valid: boolean; error?: string };
+  validate?: (value: string) => ValidationResult | Promise<ValidationResult>;
   placeholder?: string;
-  required?: boolean;
+  type?: string;
   className?: string;
+  debounceMs?: number;
 }
 
 export function ValidatedInput({
   id,
-  label,
-  type = "text",
   value,
   onChange,
   validate,
   placeholder,
-  required = false,
+  type = "text",
   className = "",
+  debounceMs = 300,
 }: ValidatedInputProps) {
   const [error, setError] = useState<string | undefined>();
+  const [isValidating, setIsValidating] = useState(false);
   const [touched, setTouched] = useState(false);
+  const debounceTimeout = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   useEffect(() => {
+    // Limpiar timeout anterior
+    if (debounceTimeout.current) {
+      clearTimeout(debounceTimeout.current as any);
+    }
+
     // Solo validar si el campo ha sido tocado y tiene validación
     if (touched && validate && value) {
-      const result = validate(value);
-      setError(result.error);
+      setIsValidating(true);
+      
+      debounceTimeout.current = setTimeout(async () => {
+        try {
+          const result = await validate(value);
+          setError(result.isValid ? undefined : result.message);
+        } catch (err) {
+          console.error("Validation error:", err);
+          setError("Error al validar");
+        } finally {
+          setIsValidating(false);
+        }
+      }, debounceMs);
     } else if (!value) {
       setError(undefined);
+      setIsValidating(false);
     }
-  }, [value, validate, touched]);
+
+    return () => {
+      if (debounceTimeout.current) {
+        clearTimeout(debounceTimeout.current as any);
+      }
+    };
+  }, [value, validate, touched, debounceMs]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onChange(e.target.value);
@@ -44,27 +72,26 @@ export function ValidatedInput({
 
   const handleBlur = () => {
     setTouched(true);
-    if (validate && value) {
-      const result = validate(value);
-      setError(result.error);
-    }
   };
 
   return (
     <div className={className}>
-      <Label htmlFor={id}>
-        {label}
-        {required && <span className="text-red-500 ml-1">*</span>}
-      </Label>
-      <Input
-        id={id}
-        type={type}
-        value={value}
-        onChange={handleChange}
-        onBlur={handleBlur}
-        placeholder={placeholder}
-        className={error ? "border-red-500 focus-visible:ring-red-500" : ""}
-      />
+      <div className="relative">
+        <Input
+          id={id}
+          type={type}
+          value={value}
+          onChange={handleChange}
+          onBlur={handleBlur}
+          placeholder={placeholder}
+          className={error ? "border-red-500 focus-visible:ring-red-500 pr-10" : "pr-10"}
+        />
+        {isValidating && (
+          <div className="absolute right-3 top-1/2 -translate-y-1/2">
+            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+          </div>
+        )}
+      </div>
       {error && (
         <p className="text-sm text-red-500 mt-1 flex items-center gap-1">
           <svg

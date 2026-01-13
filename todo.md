@@ -180,7 +180,13 @@
 - [x] Crear utilidades de validación para CBU/IBAN
 - [x] Crear utilidades de validación para coordenadas GPS
 - [x] Crear utilidades de validación para email y teléfono
-- [ ] Implementar validación de código único de cliente (pendiente)
+- [x] Implementar validación de código único de cliente
+  - [x] Crear función de verificación en db.ts
+  - [x] Implementar validación en tiempo real en formulario de creación
+  - [x] Implementar validación en tiempo real en formulario de edición
+  - [x] Añadir validación en procedimiento tRPC create
+  - [x] Añadir validación en procedimiento tRPC update
+  - [x] Probar validación con códigos duplicados
 - [x] Añadir validaciones en tiempo real en formulario de creación
 - [x] Añadir validaciones en tiempo real en formulario de edición
 - [x] Implementar validaciones en backend (tRPC)

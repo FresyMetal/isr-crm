@@ -37,6 +37,25 @@ const clientesRouter = router({
       return db.getAllClientes(input);
     }),
 
+  // Verificar si un código ya existe
+  checkCodigoExists: protectedProcedure
+    .input(z.object({ 
+      codigo: z.string(),
+      excludeId: z.number().optional() // Para excluir el cliente actual al editar
+    }))
+    .query(async ({ input }) => {
+      if (!input.codigo) return { exists: false };
+      
+      const cliente = await db.getClienteByCodigo(input.codigo);
+      
+      // Si estamos editando, excluir el cliente actual
+      if (cliente && input.excludeId && cliente.id === input.excludeId) {
+        return { exists: false };
+      }
+      
+      return { exists: !!cliente };
+    }),
+
   // Obtener cliente por ID
   getById: protectedProcedure
     .input(z.object({ id: z.number() }))
@@ -133,6 +152,17 @@ const clientesRouter = router({
     }))
     .mutation(async ({ input, ctx }) => {
       try {
+        // Validar que el código no exista si se proporciona
+        if (input.codigo) {
+          const clienteExistente = await db.getClienteByCodigo(input.codigo);
+          if (clienteExistente) {
+            throw new TRPCError({ 
+              code: 'BAD_REQUEST', 
+              message: `El código "${input.codigo}" ya está en uso por otro cliente` 
+            });
+          }
+        }
+        
         // Obtener información del plan para mapear a PSO
         const plan = await db.getPlanById(input.planId);
         if (!plan) {
@@ -306,6 +336,17 @@ const clientesRouter = router({
       }),
     }))
     .mutation(async ({ input, ctx }) => {
+      // Validar que el código no exista si se está cambiando
+      if (input.data.codigo) {
+        const clienteExistente = await db.getClienteByCodigo(input.data.codigo);
+        if (clienteExistente && clienteExistente.id !== input.id) {
+          throw new TRPCError({ 
+            code: 'BAD_REQUEST', 
+            message: `El código "${input.data.codigo}" ya está en uso por otro cliente` 
+          });
+        }
+      }
+      
       const dataToUpdate = {
         ...input.data,
         fechaVencimiento: input.data.fechaVencimiento ? new Date(input.data.fechaVencimiento) : undefined,
