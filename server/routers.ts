@@ -500,6 +500,205 @@ const clientesRouter = router({
     .query(async ({ input }) => {
       return db.getActividadesCliente(input.id);
     }),
+
+  // Calcular prorrateo para cambio de plan
+  calcularProrrateo: protectedProcedure
+    .input(z.object({
+      clienteId: z.number(),
+      nuevoPlanId: z.number(),
+      fechaCambio: z.string().optional(), // ISO string
+    }))
+    .query(async ({ input }) => {
+      const { calcularProrrateo, validarFechaCambio } = await import('./prorrateo');
+      
+      // Obtener cliente y plan actual
+      const cliente = await db.getClienteById(input.clienteId);
+      if (!cliente) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Cliente no encontrado' });
+      }
+
+      // Obtener plan nuevo
+      const planNuevo = await db.getPlanById(input.nuevoPlanId);
+      if (!planNuevo) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Plan no encontrado' });
+      }
+
+      // Obtener precio actual (puede ser personalizado)
+      const precioActual = cliente.precioMensual ? parseFloat(cliente.precioMensual) : 0;
+      const precioNuevo = parseFloat(planNuevo.precioMensual);
+
+      // Obtener última factura para calcular período
+      const ultimaFactura = await db.getUltimaFacturaCliente(input.clienteId);
+      const fechaUltimaFactura = ultimaFactura?.fechaEmision || cliente.fechaAlta;
+      
+      const fechaCambio = input.fechaCambio ? new Date(input.fechaCambio) : new Date();
+      
+      // Validar fecha de cambio
+      const validacion = validarFechaCambio(fechaUltimaFactura, fechaCambio);
+      if (!validacion.valida) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: validacion.error });
+      }
+
+      // Calcular prorrateo
+      const prorrateo = calcularProrrateo(
+        precioActual,
+        precioNuevo,
+        fechaUltimaFactura,
+        fechaCambio
+      );
+
+      return {
+        planActual: cliente.planId ? {
+          id: cliente.planId,
+          precio: precioActual,
+        } : null,
+        planNuevo: {
+          id: planNuevo.id,
+          nombre: planNuevo.nombre,
+          precio: precioNuevo,
+        },
+        prorrateo,
+        fechaUltimaFactura: fechaUltimaFactura.toISOString(),
+        fechaCambio: fechaCambio.toISOString(),
+      };
+    }),
+
+  // Cambiar plan del cliente
+  cambiarPlan: protectedProcedure
+    .input(z.object({
+      clienteId: z.number(),
+      nuevoPlanId: z.number(),
+      motivo: z.string().optional(),
+      observaciones: z.string().optional(),
+      fechaCambio: z.string().optional(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const { calcularProrrateo } = await import('./prorrateo');
+      
+      // Obtener cliente
+      const cliente = await db.getClienteById(input.clienteId);
+      if (!cliente) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Cliente no encontrado' });
+      }
+
+      // Obtener plan nuevo
+      const planNuevo = await db.getPlanById(input.nuevoPlanId);
+      if (!planNuevo) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Plan no encontrado' });
+      }
+
+      // Obtener plan anterior si existe
+      let planAnterior = null;
+      if (cliente.planId) {
+        planAnterior = await db.getPlanById(cliente.planId);
+      }
+
+      const precioActual = cliente.precioMensual ? parseFloat(cliente.precioMensual) : 0;
+      const precioNuevo = parseFloat(planNuevo.precioMensual);
+
+      // Calcular prorrateo
+      const ultimaFactura = await db.getUltimaFacturaCliente(input.clienteId);
+      const fechaUltimaFactura = ultimaFactura?.fechaEmision || cliente.fechaAlta;
+      const fechaCambio = input.fechaCambio ? new Date(input.fechaCambio) : new Date();
+      
+      const prorrateo = calcularProrrateo(
+        precioActual,
+        precioNuevo,
+        fechaUltimaFactura,
+        fechaCambio
+      );
+
+      // Actualizar cliente con nuevo plan y precio
+      await db.updateCliente(input.clienteId, {
+        planId: input.nuevoPlanId,
+        precioMensual: planNuevo.precioMensual,
+      });
+
+      // Desactivar servicio anterior si existe
+      const serviciosActivos = await db.getServiciosActivosCliente(input.clienteId);
+      for (const servicio of serviciosActivos) {
+        await db.updateServicioCliente(servicio.id, {
+          activo: false,
+          fechaFin: fechaCambio,
+        });
+      }
+
+      // Crear nuevo servicio
+      await db.createServicioCliente({
+        clienteId: input.clienteId,
+        planId: input.nuevoPlanId,
+        precioMensual: planNuevo.precioMensual,
+        activo: true,
+        fechaInicio: fechaCambio,
+      });
+
+      // Registrar en historial
+      await db.createHistorialCambioPlan({
+        clienteId: input.clienteId,
+        planAnteriorId: planAnterior?.id || null,
+        planAnteriorNombre: planAnterior?.nombre || 'Sin plan',
+        precioAnterior: precioActual.toString(),
+        planNuevoId: planNuevo.id,
+        planNuevoNombre: planNuevo.nombre,
+        precioNuevo: planNuevo.precioMensual,
+        diasRestantes: prorrateo.diasRestantes,
+        ajusteProrrateo: prorrateo.ajusteProrrateo.toString(),
+        fechaCambio: fechaCambio,
+        fechaAplicacion: fechaCambio,
+        motivo: input.motivo || null,
+        observaciones: input.observaciones || null,
+        realizadoPor: ctx.user.id,
+      });
+
+      // Registrar actividad
+      await db.createActividadCliente({
+        clienteId: input.clienteId,
+        usuarioId: ctx.user.id,
+        tipo: 'cambio_plan',
+        descripcion: `Cambio de plan: ${planAnterior?.nombre || 'Sin plan'} → ${planNuevo.nombre}. Ajuste: €${prorrateo.ajusteProrrateo.toFixed(2)}`,
+      });
+
+      // Si el cliente tiene ONT activa, actualizar perfil en PSO
+      if (cliente.numeroSerieONT && cliente.estado === 'activo' && planNuevo.perfilVelocidadPSO) {
+        try {
+          const psoClient = getPSOClient();
+          await psoClient.modificarONT({
+            sn: cliente.numeroSerieONT,
+            perfilVelocidad: planNuevo.perfilVelocidadPSO,
+            perfilUsuario: planNuevo.perfilUsuarioPSO || undefined,
+          }, input.clienteId, ctx.user.id);
+
+          await db.createActividadCliente({
+            clienteId: input.clienteId,
+            usuarioId: ctx.user.id,
+            tipo: 'actualizacion_pso',
+            descripcion: `Perfil de velocidad actualizado en PSO: ${planNuevo.perfilVelocidadPSO}`,
+          });
+        } catch (error: any) {
+          // Error en PSO no debe bloquear el cambio de plan
+          console.error('Error al actualizar PSO:', error);
+          await db.createActividadCliente({
+            clienteId: input.clienteId,
+            usuarioId: ctx.user.id,
+            tipo: 'error_pso',
+            descripcion: `Error al actualizar perfil en PSO: ${error.message}`,
+          });
+        }
+      }
+
+      return {
+        success: true,
+        prorrateo,
+        mensaje: prorrateo.descripcion,
+      };
+    }),
+
+  // Obtener historial de cambios de plan
+  getHistorialCambiosPlan: protectedProcedure
+    .input(z.object({ clienteId: z.number() }))
+    .query(async ({ input }) => {
+      return db.getHistorialCambiosPlanCliente(input.clienteId);
+    }),
 });
 
 // ============================================================================

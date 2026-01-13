@@ -14,6 +14,7 @@ import {
   campanas, InsertCampana,
   logsPSO, InsertLogPSO,
   actividadCliente, InsertActividadCliente,
+  historialCambiosPlan, InsertHistorialCambioPlan,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -353,6 +354,13 @@ export async function getServiciosActivosCliente(clienteId: number) {
     ));
 }
 
+export async function updateServicioCliente(id: number, data: Partial<InsertServicioCliente>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return db.update(serviciosCliente).set(data).where(eq(serviciosCliente.id, id));
+}
+
 // ============================================================================
 // FACTURAS
 // ============================================================================
@@ -399,6 +407,20 @@ export async function updateFactura(id: number, data: Partial<InsertFactura>) {
   if (!db) throw new Error("Database not available");
   
   return db.update(facturas).set(data).where(eq(facturas.id, id));
+}
+
+export async function getUltimaFacturaCliente(clienteId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const result = await db
+    .select()
+    .from(facturas)
+    .where(eq(facturas.clienteId, clienteId))
+    .orderBy(desc(facturas.fechaEmision))
+    .limit(1);
+  
+  return result[0] || null;
 }
 
 // ============================================================================
@@ -689,4 +711,26 @@ export async function getIngresosMensuales(meses = 12) {
     ))
     .groupBy(sql`DATE_FORMAT(${facturas.fechaEmision}, '%Y-%m')`)
     .orderBy(sql`DATE_FORMAT(${facturas.fechaEmision}, '%Y-%m')`);
+}
+
+// ============================================================================
+// HISTORIAL DE CAMBIOS DE PLAN
+// ============================================================================
+
+export async function createHistorialCambioPlan(data: InsertHistorialCambioPlan) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return db.insert(historialCambiosPlan).values(data);
+}
+
+export async function getHistorialCambiosPlanCliente(clienteId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return db
+    .select()
+    .from(historialCambiosPlan)
+    .where(eq(historialCambiosPlan.clienteId, clienteId))
+    .orderBy(desc(historialCambiosPlan.fechaCambio));
 }

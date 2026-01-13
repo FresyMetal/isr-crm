@@ -21,7 +21,8 @@ import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
 import ClienteEditForm from "@/components/ClienteEditForm";
-import { Edit } from "lucide-react";
+import { Edit, RefreshCw } from "lucide-react";
+import CambioPlanDialog from "@/components/CambioPlanDialog";
 
 const estadoLabels: Record<string, string> = {
   activo: "Activo",
@@ -45,6 +46,7 @@ export default function ClienteDetalle() {
   const [editandoCuenta, setEditandoCuenta] = useState(false);
   const [numeroCuenta, setNumeroCuenta] = useState("");
   const [modoEdicion, setModoEdicion] = useState(false);
+  const [dialogCambioPlan, setDialogCambioPlan] = useState(false);
 
   const utils = trpc.useUtils();
   const { data: cliente, isLoading } = trpc.clientes.getById.useQuery({ id: clienteId });
@@ -285,13 +287,26 @@ export default function ClienteDetalle() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Plan Contratado</p>
-                    <p className="font-medium">{(cliente as any).plan?.nombre || "-"}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Precio Mensual</p>
-                    <p className="font-medium">€{cliente.precioMensual ? Number(cliente.precioMensual).toFixed(2) : "-"}</p>
+                  <div className="col-span-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <p className="text-sm text-muted-foreground">Plan Contratado</p>
+                        <p className="font-medium">{(cliente as any).plan?.nombre || "-"}</p>
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm text-muted-foreground">Precio Mensual</p>
+                        <p className="font-medium">€{cliente.precioMensual ? Number(cliente.precioMensual).toFixed(2) : "-"}</p>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setDialogCambioPlan(true)}
+                        disabled={cliente.estado === "baja"}
+                      >
+                        <RefreshCw className="mr-2 h-4 w-4" />
+                        Cambiar Plan
+                      </Button>
+                    </div>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Número de Cuenta</p>
@@ -457,6 +472,17 @@ export default function ClienteDetalle() {
           </TabsContent>
         </Tabs>
         )}
+
+        {/* Diálogo de cambio de plan */}
+        <CambioPlanDialog
+          open={dialogCambioPlan}
+          onOpenChange={setDialogCambioPlan}
+          clienteId={clienteId}
+          planActualId={cliente.planId || undefined}
+          onSuccess={() => {
+            toast.success("Plan actualizado correctamente");
+          }}
+        />
       </div>
     </DashboardLayout>
   );

@@ -219,3 +219,14 @@
 - [x] Implementar edición de planes existentes
 - [x] Añadir validaciones en formularios de planes
 - [x] Probar creación y edición de planes
+
+## Cambio de Plan de Cliente (Nueva Solicitud)
+- [x] Crear función de cálculo de prorrateo en backend
+- [x] Implementar procedimiento tRPC para cambio de plan
+- [x] Añadir historial de cambios de plan en base de datos
+- [x] Crear interfaz de cambio de plan en ficha de cliente
+- [x] Mostrar vista previa del prorrateo antes de confirmar
+- [x] Actualizar automáticamente precio mensual del cliente
+- [x] Registrar cambio en historial del cliente
+- [x] Probar cálculo de prorrateo con diferentes escenarios
+- [x] Escribir tests unitarios para cambio de plan
