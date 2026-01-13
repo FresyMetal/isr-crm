@@ -1,0 +1,46 @@
+{
+  "query": "SELECT * FROM historial_cambios_plan WHERE cliente_id = 1 ORDER BY fecha_cambio DESC LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user pn6kPt8nGx8NF8E.root --database jT3CCftZ3Y2M85YuSeeCP2 --execute SELECT * FROM historial_cambios_plan WHERE cliente_id = 1 ORDER BY fecha_cambio DESC LIMIT 5;",
+  "rows": [
+    {
+      "id": "2",
+      "cliente_id": "1",
+      "plan_anterior_id": "30003",
+      "plan_anterior_nombre": "Fibra 600 Mb",
+      "precio_anterior": "47.99",
+      "plan_nuevo_id": "30004",
+      "plan_nuevo_nombre": "Fibra 1 Gb",
+      "precio_nuevo": "59.99",
+      "dias_restantes": "30",
+      "ajuste_prorrateo": "11.61",
+      "fecha_cambio": "2026-01-13 14:44:00",
+      "fecha_aplicacion": "2026-01-13 14:44:00",
+      "motivo": "NULL",
+      "observaciones": "NULL",
+      "realizado_por": "1",
+      "created_at": "2026-01-13 14:43:59"
+    },
+    {
+      "id": "1",
+      "cliente_id": "1",
+      "plan_anterior_id": "1",
+      "plan_anterior_nombre": "Plan Test Fibra 100 Actualizado",
+      "precio_anterior": "0.00",
+      "plan_nuevo_id": "30003",
+      "plan_nuevo_nombre": "Fibra 600 Mb",
+      "precio_nuevo": "47.99",
+      "dias_restantes": "30",
+      "ajuste_prorrateo": "46.44",
+      "fecha_cambio": "2026-01-13 14:33:51",
+      "fecha_aplicacion": "2026-01-13 14:33:51",
+      "motivo": "Solicitud del cliente para mayor velocidad de navegación",
+      "observaciones": "NULL",
+      "realizado_por": "1",
+      "created_at": "2026-01-13 14:33:50"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tcliente_id\tplan_anterior_id\tplan_anterior_nombre\tprecio_anterior\tplan_nuevo_id\tplan_nuevo_nombre\tprecio_nuevo\tdias_restantes\tajuste_prorrateo\tfecha_cambio\tfecha_aplicacion\tmotivo\tobservaciones\trealizado_por\tcreated_at\n2\t1\t30003\tFibra 600 Mb\t47.99\t30004\tFibra 1 Gb\t59.99\t30\t11.61\t2026-01-13 14:44:00\t2026-01-13 14:44:00\tNULL\tNULL\t1\t2026-01-13 14:43:59\n1\t1\t1\tPlan Test Fibra 100 Actualizado\t0.00\t30003\tFibra 600 Mb\t47.99\t30\t46.44\t2026-01-13 14:33:51\t2026-01-13 14:33:51\tSolicitud del cliente para mayor velocidad de navegación\tNULL\t1\t2026-01-13 14:33:50\n",
+  "stderr": "",
+  "execution_time_ms": 800
+}

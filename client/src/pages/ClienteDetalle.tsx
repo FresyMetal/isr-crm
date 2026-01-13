@@ -21,8 +21,9 @@ import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
 import ClienteEditForm from "@/components/ClienteEditForm";
-import { Edit, RefreshCw } from "lucide-react";
+import { Edit, RefreshCw, History } from "lucide-react";
 import CambioPlanDialog from "@/components/CambioPlanDialog";
+import HistorialCambiosPlanTable from "@/components/HistorialCambiosPlanTable";
 
 const estadoLabels: Record<string, string> = {
   activo: "Activo",
@@ -51,6 +52,7 @@ export default function ClienteDetalle() {
   const utils = trpc.useUtils();
   const { data: cliente, isLoading } = trpc.clientes.getById.useQuery({ id: clienteId });
   const { data: actividad } = trpc.clientes.getActivity.useQuery({ id: clienteId });
+  const { data: historialCambios } = trpc.clientes.getHistorialCambiosPlan.useQuery({ clienteId });
 
   const suspendMutation = trpc.clientes.suspend.useMutation({
     onSuccess: () => {
@@ -250,6 +252,10 @@ export default function ClienteDetalle() {
             <TabsTrigger value="actividad">
               <Activity className="mr-2 h-4 w-4" />
               Actividad
+            </TabsTrigger>
+            <TabsTrigger value="historial-planes">
+              <History className="mr-2 h-4 w-4" />
+              Historial de Planes
             </TabsTrigger>
           </TabsList>
 
@@ -469,6 +475,11 @@ export default function ClienteDetalle() {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Historial de Cambios de Plan */}
+          <TabsContent value="historial-planes">
+            <HistorialCambiosPlanTable cambios={historialCambios || []} />
           </TabsContent>
         </Tabs>
         )}

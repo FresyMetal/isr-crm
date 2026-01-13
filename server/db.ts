@@ -728,9 +728,56 @@ export async function getHistorialCambiosPlanCliente(clienteId: number) {
   const db = await getDb();
   if (!db) return [];
   
-  return db
-    .select()
+  // Usar los campos que ya están en la tabla (planAnteriorNombre, planNuevoNombre)
+  const cambios = await db
+    .select({
+      id: historialCambiosPlan.id,
+      clienteId: historialCambiosPlan.clienteId,
+      planAnteriorId: historialCambiosPlan.planAnteriorId,
+      planNuevoId: historialCambiosPlan.planNuevoId,
+      precioAnterior: historialCambiosPlan.precioAnterior,
+      precioNuevo: historialCambiosPlan.precioNuevo,
+      diasRestantes: historialCambiosPlan.diasRestantes,
+      ajusteProrrateo: historialCambiosPlan.ajusteProrrateo,
+      fechaCambio: historialCambiosPlan.fechaCambio,
+      fechaAplicacion: historialCambiosPlan.fechaAplicacion,
+      motivo: historialCambiosPlan.motivo,
+      observaciones: historialCambiosPlan.observaciones,
+      realizadoPor: historialCambiosPlan.realizadoPor,
+      createdAt: historialCambiosPlan.createdAt,
+      planAnteriorNombre: historialCambiosPlan.planAnteriorNombre,
+      planNuevoNombre: historialCambiosPlan.planNuevoNombre,
+      usuarioNombre: users.name,
+    })
     .from(historialCambiosPlan)
+    .leftJoin(
+      users,
+      eq(historialCambiosPlan.realizadoPor, users.id)
+    )
     .where(eq(historialCambiosPlan.clienteId, clienteId))
     .orderBy(desc(historialCambiosPlan.fechaCambio));
+  
+  // Transformar a formato esperado por el componente
+  return cambios.map(c => {
+    // Calcular diasTranscurridos si tenemos la información necesaria
+    let diasTranscurridos: number | null = null;
+    if (c.diasRestantes !== null) {
+      // Calcular días del mes
+      const fechaCambio = new Date(c.fechaCambio);
+      const inicioMes = new Date(c.fechaAplicacion);
+      inicioMes.setMonth(inicioMes.getMonth() - 1);
+      const finMes = new Date(inicioMes);
+      finMes.setMonth(finMes.getMonth() + 1);
+      const diasTotalesMes = Math.ceil((finMes.getTime() - inicioMes.getTime()) / (1000 * 60 * 60 * 24));
+      diasTranscurridos = diasTotalesMes - c.diasRestantes;
+    }
+    
+    return {
+      ...c,
+      diasTranscurridos,
+      planAnterior: c.planAnteriorNombre ? { nombre: c.planAnteriorNombre } : null,
+      planNuevo: { nombre: c.planNuevoNombre },
+      usuario: c.usuarioNombre ? { name: c.usuarioNombre } : null,
+    };
+  });
 }

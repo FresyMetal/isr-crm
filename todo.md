@@ -230,3 +230,10 @@
 - [x] Registrar cambio en historial del cliente
 - [x] Probar cálculo de prorrateo con diferentes escenarios
 - [x] Escribir tests unitarios para cambio de plan
+
+## Historial de Cambios de Plan - Visualización (Nueva Solicitud)
+- [x] Crear componente de tabla de historial de cambios
+- [x] Añadir pestaña "Historial de Planes" en ficha del cliente
+- [x] Mostrar cambios en orden cronológico inverso
+- [x] Incluir información: fecha, plan anterior, plan nuevo, ajuste de prorrateo, motivo
+- [x] Probar visualización con múltiples cambios
