@@ -237,3 +237,8 @@
 - [x] Mostrar cambios en orden cronológico inverso
 - [x] Incluir información: fecha, plan anterior, plan nuevo, ajuste de prorrateo, motivo
 - [x] Probar visualización con múltiples cambios
+
+## Bug: Menú Lateral Desaparece en Página de Planes
+- [x] Identificar causa del problema en PlanesGestion.tsx
+- [x] Corregir layout para usar DashboardLayout correctamente
+- [x] Probar que el menú lateral funcione en todas las páginas
