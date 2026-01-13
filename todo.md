@@ -192,3 +192,23 @@
 - [x] Implementar validaciones en backend (tRPC)
 - [x] Mostrar mensajes de error claros al usuario
 - [x] Probar todas las validaciones
+
+
+## Búsqueda Avanzada de Clientes (Nueva Solicitud)
+- [x] Actualizar procedimiento tRPC getAll para soportar filtros múltiples
+- [x] Crear componente de filtros avanzados con UI colapsable
+- [x] Implementar filtros por:
+  - [x] Texto libre (nombre, email, teléfono, dirección)
+  - [x] Tipo de cliente (Particular, Empresa, Autónomo)
+  - [x] Estado (Activo, Bloqueado)
+  - [x] Plan contratado
+  - [x] Cobrador
+  - [x] Vendedor
+  - [x] Medio de pago
+  - [x] Rango de fechas de alta
+  - [x] Localidad/Provincia
+- [x] Implementar lógica de combinación de filtros (AND)
+- [x] Añadir botón de limpiar filtros
+- [x] Mostrar contador de resultados filtrados
+- [x] Integrar filtros en página de clientes
+- [x] Probar combinaciones de filtros

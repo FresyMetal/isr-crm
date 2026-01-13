@@ -31,7 +31,16 @@ const clientesRouter = router({
     .input(z.object({
       estado: z.string().optional(),
       localidad: z.string().optional(),
+      provincia: z.string().optional(),
       search: z.string().optional(),
+      tipoCliente: z.string().optional(),
+      planId: z.number().optional(),
+      cobrador: z.string().optional(),
+      vendedor: z.string().optional(),
+      medioPago: z.string().optional(),
+      bloquear: z.boolean().optional(),
+      fechaDesde: z.string().optional(),
+      fechaHasta: z.string().optional(),
     }).optional())
     .query(async ({ input }) => {
       return db.getAllClientes(input);

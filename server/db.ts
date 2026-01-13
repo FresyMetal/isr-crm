@@ -183,7 +183,16 @@ export async function getClienteBySN(numeroSerieONT: string) {
 export async function getAllClientes(filters?: {
   estado?: string;
   localidad?: string;
+  provincia?: string;
   search?: string;
+  tipoCliente?: string;
+  planId?: number;
+  cobrador?: string;
+  vendedor?: string;
+  medioPago?: string;
+  bloquear?: boolean;
+  fechaDesde?: string;
+  fechaHasta?: string;
 }) {
   const db = await getDb();
   if (!db) return [];
@@ -191,19 +200,71 @@ export async function getAllClientes(filters?: {
   let query = db.select().from(clientes);
   
   const conditions = [];
+  
+  // Filtro por estado
   if (filters?.estado) {
     conditions.push(eq(clientes.estado, filters.estado as any));
   }
+  
+  // Filtro por localidad
   if (filters?.localidad) {
-    conditions.push(eq(clientes.localidad, filters.localidad));
+    conditions.push(like(clientes.localidad, `%${filters.localidad}%`));
   }
+  
+  // Filtro por provincia
+  if (filters?.provincia) {
+    conditions.push(like(clientes.provincia, `%${filters.provincia}%`));
+  }
+  
+  // Filtro por tipo de cliente
+  if (filters?.tipoCliente) {
+    conditions.push(eq(clientes.tipoCliente, filters.tipoCliente));
+  }
+  
+  // Filtro por plan
+  if (filters?.planId) {
+    conditions.push(eq(clientes.planId, filters.planId));
+  }
+  
+  // Filtro por cobrador
+  if (filters?.cobrador) {
+    conditions.push(like(clientes.cobrador, `%${filters.cobrador}%`));
+  }
+  
+  // Filtro por vendedor
+  if (filters?.vendedor) {
+    conditions.push(like(clientes.vendedor, `%${filters.vendedor}%`));
+  }
+  
+  // Filtro por medio de pago
+  if (filters?.medioPago) {
+    conditions.push(eq(clientes.medioPago, filters.medioPago));
+  }
+  
+  // Filtro por estado de bloqueo
+  if (filters?.bloquear !== undefined) {
+    conditions.push(eq(clientes.bloquear, filters.bloquear));
+  }
+  
+  // Filtro por rango de fechas
+  if (filters?.fechaDesde) {
+    conditions.push(gte(clientes.createdAt, new Date(filters.fechaDesde)));
+  }
+  if (filters?.fechaHasta) {
+    conditions.push(lte(clientes.createdAt, new Date(filters.fechaHasta)));
+  }
+  
+  // Búsqueda por texto libre
   if (filters?.search) {
     conditions.push(
       or(
         like(clientes.nombre, `%${filters.search}%`),
         like(clientes.apellidos, `%${filters.search}%`),
         like(clientes.dni, `%${filters.search}%`),
-        like(clientes.email, `%${filters.search}%`)
+        like(clientes.email, `%${filters.search}%`),
+        like(clientes.telefono, `%${filters.search}%`),
+        like(clientes.direccion, `%${filters.search}%`),
+        like(clientes.codigo, `%${filters.search}%`)
       )
     );
   }

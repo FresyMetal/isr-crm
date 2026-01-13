@@ -15,6 +15,7 @@ import { trpc } from "@/lib/trpc";
 import { Plus, Search, User } from "lucide-react";
 import { Link } from "wouter";
 import { useState } from "react";
+import ClientesFilters from "@/components/ClientesFilters";
 
 const estadoLabels: Record<string, string> = {
   activo: "Activo",
@@ -31,8 +32,8 @@ const estadoColors: Record<string, string> = {
 };
 
 export default function Clientes() {
-  const [search, setSearch] = useState("");
-  const { data: clientes, isLoading } = trpc.clientes.list.useQuery({ search });
+  const [filters, setFilters] = useState({});
+  const { data: clientes, isLoading } = trpc.clientes.list.useQuery(filters);
 
   return (
     <DashboardLayout>
@@ -53,28 +54,11 @@ export default function Clientes() {
           </Link>
         </div>
 
-        {/* Filtros */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Buscar Clientes</CardTitle>
-            <CardDescription>
-              Busca por nombre, DNI, email o teléfono
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex gap-4">
-              <div className="relative flex-1">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar cliente..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="pl-8"
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Filtros Avanzados */}
+        <ClientesFilters 
+          onFilterChange={setFilters} 
+          resultCount={clientes?.length}
+        />
 
         {/* Tabla de Clientes */}
         <Card>
