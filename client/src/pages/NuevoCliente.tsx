@@ -11,6 +11,16 @@ import { ArrowLeft, Save } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useState } from "react";
 import { toast } from "sonner";
+import { ValidatedInput } from "@/components/ValidatedInput";
+import {
+  validateCBUorIBAN,
+  validateLatitude,
+  validateLongitude,
+  validateEmail,
+  validatePhone,
+  validateDNI,
+  validateCIF,
+} from "@/lib/validations";
 
 export default function NuevoCliente() {
   const [, setLocation] = useLocation();
@@ -193,14 +203,22 @@ export default function NuevoCliente() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="dni">DNI/NIF/CIF</Label>
-                  <Input
-                    id="dni"
-                    value={formData.dni}
-                    onChange={(e) => handleChange("dni", e.target.value)}
-                  />
-                </div>
+                <ValidatedInput
+                  id="dni"
+                  label="DNI/NIF/CIF"
+                  value={formData.dni}
+                  onChange={(value) => handleChange("dni", value)}
+                  validate={(value) => {
+                    if (formData.tipoId === 'NIF' || formData.tipoId === 'DNI') {
+                      return validateDNI(value);
+                    } else if (formData.tipoId === 'CIF') {
+                      return validateCIF(value);
+                    }
+                    return { valid: true };
+                  }}
+                  placeholder="Ej: 12345678A"
+                  className="space-y-2"
+                />
                 <div className="space-y-2">
                   <Label htmlFor="numero">Número</Label>
                   <Input
@@ -213,31 +231,33 @@ export default function NuevoCliente() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => handleChange("email", e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="telefono">Teléfono</Label>
-                  <Input
-                    id="telefono"
-                    value={formData.telefono}
-                    onChange={(e) => handleChange("telefono", e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="telefonoAlternativo">Teléfono Alternativo</Label>
-                  <Input
-                    id="telefonoAlternativo"
-                    value={formData.telefonoAlternativo}
-                    onChange={(e) => handleChange("telefonoAlternativo", e.target.value)}
-                  />
-                </div>
+                <ValidatedInput
+                  id="email"
+                  label="Email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(value) => handleChange("email", value)}
+                  validate={validateEmail}
+                  className="space-y-2"
+                />
+                <ValidatedInput
+                  id="telefono"
+                  label="Teléfono"
+                  value={formData.telefono}
+                  onChange={(value) => handleChange("telefono", value)}
+                  validate={validatePhone}
+                  placeholder="Ej: 612345678"
+                  className="space-y-2"
+                />
+                <ValidatedInput
+                  id="telefonoAlternativo"
+                  label="Teléfono Alternativo"
+                  value={formData.telefonoAlternativo}
+                  onChange={(value) => handleChange("telefonoAlternativo", value)}
+                  validate={validatePhone}
+                  placeholder="Ej: 912345678"
+                  className="space-y-2"
+                />
               </div>
 
               <div className="space-y-2">
@@ -348,24 +368,24 @@ export default function NuevoCliente() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="latitud">Latitud</Label>
-                  <Input
-                    id="latitud"
-                    value={formData.latitud}
-                    onChange={(e) => handleChange("latitud", e.target.value)}
-                    placeholder="39.682071"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="longitud">Longitud</Label>
-                  <Input
-                    id="longitud"
-                    value={formData.longitud}
-                    onChange={(e) => handleChange("longitud", e.target.value)}
-                    placeholder="-0.338390"
-                  />
-                </div>
+                <ValidatedInput
+                  id="latitud"
+                  label="Latitud"
+                  value={formData.latitud}
+                  onChange={(value) => handleChange("latitud", value)}
+                  validate={validateLatitude}
+                  placeholder="39.682071"
+                  className="space-y-2"
+                />
+                <ValidatedInput
+                  id="longitud"
+                  label="Longitud"
+                  value={formData.longitud}
+                  onChange={(value) => handleChange("longitud", value)}
+                  validate={validateLongitude}
+                  placeholder="-0.338390"
+                  className="space-y-2"
+                />
               </div>
             </CardContent>
           </Card>
@@ -462,14 +482,15 @@ export default function NuevoCliente() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="cbu">CBU / IBAN</Label>
-                  <Input
-                    id="cbu"
-                    value={formData.cbu}
-                    onChange={(e) => handleChange("cbu", e.target.value)}
-                  />
-                </div>
+                <ValidatedInput
+                  id="cbu"
+                  label="CBU / IBAN"
+                  value={formData.cbu}
+                  onChange={(value) => handleChange("cbu", value)}
+                  validate={validateCBUorIBAN}
+                  placeholder="Ej: 0170001740000012345678 o ES9121000418450200051332"
+                  className="space-y-2"
+                />
                 <div className="space-y-2">
                   <Label htmlFor="tarjetaCredito">Tarjeta de Crédito</Label>
                   <Input

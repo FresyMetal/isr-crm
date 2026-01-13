@@ -174,3 +174,15 @@
 - [x] Actualizar formulario de edición de clientes
 - [x] Migrar base de datos con nuevos campos
 - [x] Probar creación y edición de clientes con nuevos campos
+
+
+## Validaciones de Datos de Cliente (Nueva Solicitud)
+- [x] Crear utilidades de validación para CBU/IBAN
+- [x] Crear utilidades de validación para coordenadas GPS
+- [x] Crear utilidades de validación para email y teléfono
+- [ ] Implementar validación de código único de cliente (pendiente)
+- [x] Añadir validaciones en tiempo real en formulario de creación
+- [x] Añadir validaciones en tiempo real en formulario de edición
+- [x] Implementar validaciones en backend (tRPC)
+- [x] Mostrar mensajes de error claros al usuario
+- [x] Probar todas las validaciones

@@ -72,8 +72,16 @@ const clientesRouter = router({
       codigoPostal: z.string().optional(),
       localidad: z.string().min(1),
       provincia: z.string().optional(),
-      latitud: z.string().optional(),
-      longitud: z.string().optional(),
+      latitud: z.string().optional().refine((val) => {
+        if (!val) return true;
+        const lat = parseFloat(val);
+        return !isNaN(lat) && lat >= -90 && lat <= 90;
+      }, { message: 'Latitud inválida (debe estar entre -90 y 90)' }),
+      longitud: z.string().optional().refine((val) => {
+        if (!val) return true;
+        const lng = parseFloat(val);
+        return !isNaN(lng) && lng >= -180 && lng <= 180;
+      }, { message: 'Longitud inválida (debe estar entre -180 y 180)' }),
       extra1: z.string().optional(),
       extra2: z.string().optional(),
       
@@ -88,7 +96,14 @@ const clientesRouter = router({
       // Datos financieros
       gratis: z.boolean().optional(),
       recuperacion: z.string().optional(),
-      cbu: z.string().optional(),
+      cbu: z.string().optional().refine((val) => {
+        if (!val) return true;
+        const clean = val.replace(/[\s-]/g, '');
+        // Validar CBU (22 dígitos) o IBAN (empieza con 2 letras)
+        if (/^\d{22}$/.test(clean)) return true; // CBU básico
+        if (/^[A-Z]{2}\d{2}[A-Z0-9]{1,30}$/i.test(clean)) return true; // IBAN básico
+        return false;
+      }, { message: 'CBU/IBAN inválido' }),
       tarjetaCredito: z.string().optional(),
       pagoAutomatico: z.boolean().optional(),
       
@@ -257,7 +272,14 @@ const clientesRouter = router({
         // Datos financieros
         gratis: z.boolean().optional(),
         recuperacion: z.string().optional(),
-        cbu: z.string().optional(),
+        cbu: z.string().optional().refine((val) => {
+        if (!val) return true;
+        const clean = val.replace(/[\s-]/g, '');
+        // Validar CBU (22 dígitos) o IBAN (empieza con 2 letras)
+        if (/^\d{22}$/.test(clean)) return true; // CBU básico
+        if (/^[A-Z]{2}\d{2}[A-Z0-9]{1,30}$/i.test(clean)) return true; // IBAN básico
+        return false;
+      }, { message: 'CBU/IBAN inválido' }),
         tarjetaCredito: z.string().optional(),
         pagoAutomatico: z.boolean().optional(),
         
@@ -783,8 +805,16 @@ const leadsRouter = router({
     .input(z.object({
       nombre: z.string().min(1),
       apellidos: z.string().optional(),
-      email: z.string().email().optional(),
-      telefono: z.string().optional(),
+      email: z.string().optional().refine((val) => {
+        if (!val) return true;
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
+      }, { message: 'Email inválido' }),
+      telefono: z.string().optional().refine((val) => {
+        if (!val) return true;
+        const clean = val.replace(/[\s\-()]/g, '');
+        return /^(\+34)?[6-9]\d{8}$/.test(clean);
+      }, { message: 'Teléfono inválido (debe ser español)' }),
+      telefonoAlternativo: z.string().optional(),
       direccion: z.string().optional(),
       localidad: z.string().optional(),
       fuente: z.string().optional(),
