@@ -243,7 +243,7 @@
 - [x] Corregir layout para usar DashboardLayout correctamente
 - [x] Probar que el menú lateral funcione en todas las páginas
 
-## Bug: Error al Iniciar Sesión (Usuario Duplicado) - RESUELTO DEFINITIVAMENTE
+## Bug: Error al Iniciar Sesión (Usuario Duplicado) - USUARIO REPORTA QUE PERSISTE
 - [x] Identificar causa del error de inserción duplicada
 - [x] Corregir lógica para buscar por openId (campo único) en lugar de email
 - [x] Eliminar usuario duplicado de la base de datos
@@ -255,7 +255,7 @@
 - [x] Probar con usuario nuevo testuser (exitoso)
 - [x] Probar múltiples logins consecutivos (exitoso)
 
-## Bug: Sesión Expira Después de 5-10 Segundos - RESUELTO
+## Bug: Sesión Expira Después de 7 Segundos - USUARIO REPORTA QUE PERSISTE
 - [x] Identificar causa de la expiración prematura de sesión (contexto tRPC no reconocía tokens locales)
 - [x] Revisar código de manejo de tokens en el frontend
 - [x] Modificar contexto tRPC para soportar tokens locales además de OAuth
@@ -263,3 +263,10 @@
 - [x] Enviar token en header Authorization en todas las peticiones tRPC
 - [x] Limpiar token al hacer logout
 - [x] Probar que la sesión se mantenga activa (probado 20+ segundos sin expiración)
+
+## Bug: Problema de Caché/localStorage en Navegadores Normales - RESUELTO
+- [x] Usuario reporta que funciona en modo incógnito pero no en navegador normal
+- [x] Identificado: datos antiguos en localStorage/cookies causan conflictos
+- [x] Crear mecanismo de limpieza automática en el login
+- [x] Modificar Login.tsx para limpiar localStorage al cargar la página
+- [x] Ahora el login limpia automáticamente datos antiguos
