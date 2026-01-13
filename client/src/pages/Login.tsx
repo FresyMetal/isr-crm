@@ -36,7 +36,10 @@ export default function Login() {
         throw new Error(data.message || "Error al iniciar sesión");
       }
 
-      if (data.success) {
+      if (data.success && data.token) {
+        // Guardar token en localStorage
+        localStorage.setItem("auth_token", data.token);
+        
         toast.success("Sesión iniciada correctamente");
         
         // Redirigir al dashboard después de un breve delay

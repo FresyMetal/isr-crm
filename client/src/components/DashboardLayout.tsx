@@ -93,6 +93,8 @@ function DashboardLayoutContent({
       method: "POST",
       credentials: "include"
     });
+    // Limpiar token de localStorage
+    localStorage.removeItem("auth_token");
     window.location.href = "/login";
   };
 

@@ -254,3 +254,12 @@
 - [x] Probar manualmente con usuario admin (exitoso)
 - [x] Probar con usuario nuevo testuser (exitoso)
 - [x] Probar múltiples logins consecutivos (exitoso)
+
+## Bug: Sesión Expira Después de 5-10 Segundos - RESUELTO
+- [x] Identificar causa de la expiración prematura de sesión (contexto tRPC no reconocía tokens locales)
+- [x] Revisar código de manejo de tokens en el frontend
+- [x] Modificar contexto tRPC para soportar tokens locales además de OAuth
+- [x] Guardar token en localStorage al hacer login
+- [x] Enviar token en header Authorization en todas las peticiones tRPC
+- [x] Limpiar token al hacer logout
+- [x] Probar que la sesión se mantenga activa (probado 20+ segundos sin expiración)
