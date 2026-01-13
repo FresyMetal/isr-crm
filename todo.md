@@ -242,3 +242,8 @@
 - [x] Identificar causa del problema en PlanesGestion.tsx
 - [x] Corregir layout para usar DashboardLayout correctamente
 - [x] Probar que el menú lateral funcione en todas las páginas
+
+## Bug: Error al Iniciar Sesión (Usuario Duplicado)
+- [x] Identificar causa del error de inserción duplicada
+- [x] Corregir lógica para usar upsert en lugar de insert
+- [x] Probar inicio de sesión múltiples veces
