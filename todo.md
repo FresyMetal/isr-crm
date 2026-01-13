@@ -167,3 +167,10 @@
 - [x] Cambiar autenticación de OAuth a usuario/contraseña simple - Endpoints de login creados
 - [x] Crear página de login personalizado - Login.tsx creado
 - [ ] Verificar que todos los formularios funcionan correctamente
+
+## Ampliación de Campos de Cliente (Nueva Solicitud)
+- [x] Añadir campos adicionales al esquema de clientes: código, domicilio fiscal, tipo cliente, tipo ID, número telefónico, envío factura auto, envío recibo/pago auto, calle1, calle2, extra1, extra2, lat/lng, medio pago, cobrador, vendedor, contrato, tipo contrato, fecha venc, gratis, recuperación, CBU, estados, bloquear, pre aviso, ter venc, prox mes, actividad comercial, tarjeta crédito, pago automático
+- [x] Actualizar formulario de creación de clientes con todos los nuevos campos
+- [ ] Actualizar formulario de edición de clientes
+- [x] Migrar base de datos con nuevos campos
+- [x] Probar creación y edición de clientes con nuevos campos

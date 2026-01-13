@@ -17,20 +17,63 @@ export default function NuevoCliente() {
   const { data: planes } = trpc.planes.list.useQuery({ activosOnly: true });
   
   const [formData, setFormData] = useState({
+    // Datos básicos
+    codigo: "",
     nombre: "",
     apellidos: "",
+    tipoCliente: "Particular",
+    tipoId: "NIF",
     dni: "",
     email: "",
     telefono: "",
     telefonoAlternativo: "",
+    numero: "",
+    contacto: "",
+    
+    // Dirección
     direccion: "",
+    domicilioFiscal: "",
+    calle1: "",
+    calle2: "",
     codigoPostal: "",
     localidad: "",
     provincia: "",
+    latitud: "",
+    longitud: "",
+    extra1: "",
+    extra2: "",
+    
+    // Datos comerciales
+    medioPago: "Caja",
+    cobrador: "",
+    vendedor: "",
+    contrato: false,
+    tipoContrato: "",
+    fechaVencimiento: "",
+    
+    // Datos financieros
+    gratis: false,
+    recuperacion: "",
+    cbu: "",
+    tarjetaCredito: "",
+    pagoAutomatico: false,
+    
+    // Configuración
+    envioFacturaAuto: false,
+    envioReciboPagoAuto: false,
+    bloquear: false,
+    preAviso: false,
+    terVenc: "0",
+    proxMes: false,
+    actividadComercial: "",
+    
+    // Técnicos
     numeroSerieONT: "",
     modeloONT: "",
     olt: "",
     pon: "",
+    
+    // Plan
     planId: "",
     observaciones: "",
     activarEnPSO: false,
@@ -50,13 +93,14 @@ export default function NuevoCliente() {
     e.preventDefault();
     
     if (!formData.nombre || !formData.localidad || !formData.direccion || !formData.planId) {
-      toast.error("Por favor completa los campos obligatorios");
+      toast.error("Por favor completa los campos obligatorios (Nombre, Localidad, Dirección, Plan)");
       return;
     }
 
     createClienteMutation.mutate({
       ...formData,
       planId: parseInt(formData.planId),
+      terVenc: parseInt(formData.terVenc) || 0,
     });
   };
 
@@ -88,13 +132,22 @@ export default function NuevoCliente() {
             <CardHeader>
               <CardTitle>Datos Personales</CardTitle>
               <CardDescription>
-                Información de contacto del cliente
+                Información básica del cliente
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="nombre">Nombre *</Label>
+                  <Label htmlFor="codigo">Código Cliente</Label>
+                  <Input
+                    id="codigo"
+                    value={formData.codigo}
+                    onChange={(e) => handleChange("codigo", e.target.value)}
+                    placeholder="Ej: 000003"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="nombre">Nombre/Empresa *</Label>
                   <Input
                     id="nombre"
                     value={formData.nombre}
@@ -110,14 +163,56 @@ export default function NuevoCliente() {
                     onChange={(e) => handleChange("apellidos", e.target.value)}
                   />
                 </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="dni">DNI/NIF</Label>
+                  <Label htmlFor="tipoCliente">Tipo Cliente</Label>
+                  <Select value={formData.tipoCliente} onValueChange={(value) => handleChange("tipoCliente", value)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Particular">Particular</SelectItem>
+                      <SelectItem value="Empresa">Empresa</SelectItem>
+                      <SelectItem value="Autónomo">Autónomo</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="tipoId">Tipo ID</Label>
+                  <Select value={formData.tipoId} onValueChange={(value) => handleChange("tipoId", value)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="NIF">NIF</SelectItem>
+                      <SelectItem value="CIF">CIF</SelectItem>
+                      <SelectItem value="NIE">NIE</SelectItem>
+                      <SelectItem value="Pasaporte">Pasaporte</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="dni">DNI/NIF/CIF</Label>
                   <Input
                     id="dni"
                     value={formData.dni}
                     onChange={(e) => handleChange("dni", e.target.value)}
                   />
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="numero">Número</Label>
+                  <Input
+                    id="numero"
+                    value={formData.numero}
+                    onChange={(e) => handleChange("numero", e.target.value)}
+                    placeholder="999999999"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
                   <Input
@@ -144,18 +239,56 @@ export default function NuevoCliente() {
                   />
                 </div>
               </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="contacto">Persona de Contacto</Label>
+                <Input
+                  id="contacto"
+                  value={formData.contacto}
+                  onChange={(e) => handleChange("contacto", e.target.value)}
+                />
+              </div>
             </CardContent>
           </Card>
 
-          {/* Dirección de Instalación */}
+          {/* Dirección */}
           <Card>
             <CardHeader>
-              <CardTitle>Dirección de Instalación</CardTitle>
+              <CardTitle>Dirección e Instalación</CardTitle>
               <CardDescription>
-                Ubicación donde se instalará el servicio
+                Ubicación del cliente y punto de instalación
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="domicilioFiscal">Domicilio Fiscal</Label>
+                <Input
+                  id="domicilioFiscal"
+                  value={formData.domicilioFiscal}
+                  onChange={(e) => handleChange("domicilioFiscal", e.target.value)}
+                  placeholder="Dirección fiscal si es diferente a la de instalación"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="calle1">Calle 1</Label>
+                  <Input
+                    id="calle1"
+                    value={formData.calle1}
+                    onChange={(e) => handleChange("calle1", e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="calle2">Calle 2</Label>
+                  <Input
+                    id="calle2"
+                    value={formData.calle2}
+                    onChange={(e) => handleChange("calle2", e.target.value)}
+                  />
+                </div>
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="direccion">Dirección Completa *</Label>
                 <Input
@@ -166,6 +299,7 @@ export default function NuevoCliente() {
                   required
                 />
               </div>
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="codigoPostal">Código Postal</Label>
@@ -191,6 +325,252 @@ export default function NuevoCliente() {
                     value={formData.provincia}
                     onChange={(e) => handleChange("provincia", e.target.value)}
                   />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="extra1">Extra 1</Label>
+                  <Input
+                    id="extra1"
+                    value={formData.extra1}
+                    onChange={(e) => handleChange("extra1", e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="extra2">Extra 2</Label>
+                  <Input
+                    id="extra2"
+                    value={formData.extra2}
+                    onChange={(e) => handleChange("extra2", e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="latitud">Latitud</Label>
+                  <Input
+                    id="latitud"
+                    value={formData.latitud}
+                    onChange={(e) => handleChange("latitud", e.target.value)}
+                    placeholder="39.682071"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="longitud">Longitud</Label>
+                  <Input
+                    id="longitud"
+                    value={formData.longitud}
+                    onChange={(e) => handleChange("longitud", e.target.value)}
+                    placeholder="-0.338390"
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Datos Comerciales */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Datos Comerciales y Contractuales</CardTitle>
+              <CardDescription>
+                Información de contrato y gestión comercial
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="medioPago">Medio de Pago</Label>
+                  <Select value={formData.medioPago} onValueChange={(value) => handleChange("medioPago", value)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Caja">Caja</SelectItem>
+                      <SelectItem value="Banco">Banco</SelectItem>
+                      <SelectItem value="Transferencia">Transferencia</SelectItem>
+                      <SelectItem value="Domiciliación">Domiciliación</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="cobrador">Cobrador</Label>
+                  <Input
+                    id="cobrador"
+                    value={formData.cobrador}
+                    onChange={(e) => handleChange("cobrador", e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="vendedor">Vendedor</Label>
+                  <Input
+                    id="vendedor"
+                    value={formData.vendedor}
+                    onChange={(e) => handleChange("vendedor", e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="contrato"
+                    checked={formData.contrato}
+                    onCheckedChange={(checked) => handleChange("contrato", checked)}
+                  />
+                  <Label htmlFor="contrato" className="cursor-pointer">Contrato Firmado</Label>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="tipoContrato">Tipo Contrato</Label>
+                  <Input
+                    id="tipoContrato"
+                    value={formData.tipoContrato}
+                    onChange={(e) => handleChange("tipoContrato", e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="fechaVencimiento">Fecha Vencimiento</Label>
+                  <Input
+                    id="fechaVencimiento"
+                    type="date"
+                    value={formData.fechaVencimiento}
+                    onChange={(e) => handleChange("fechaVencimiento", e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="actividadComercial">Actividad Comercial</Label>
+                <Textarea
+                  id="actividadComercial"
+                  value={formData.actividadComercial}
+                  onChange={(e) => handleChange("actividadComercial", e.target.value)}
+                  rows={2}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Datos Financieros */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Datos Financieros y Facturación</CardTitle>
+              <CardDescription>
+                Información de pago y facturación
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="cbu">CBU / IBAN</Label>
+                  <Input
+                    id="cbu"
+                    value={formData.cbu}
+                    onChange={(e) => handleChange("cbu", e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="tarjetaCredito">Tarjeta de Crédito</Label>
+                  <Input
+                    id="tarjetaCredito"
+                    value={formData.tarjetaCredito}
+                    onChange={(e) => handleChange("tarjetaCredito", e.target.value)}
+                    placeholder="Últimos 4 dígitos"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="recuperacion">Recuperación</Label>
+                  <Input
+                    id="recuperacion"
+                    value={formData.recuperacion}
+                    onChange={(e) => handleChange("recuperacion", e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="terVenc">Tercer Vencimiento (días)</Label>
+                  <Input
+                    id="terVenc"
+                    type="number"
+                    value={formData.terVenc}
+                    onChange={(e) => handleChange("terVenc", e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="gratis"
+                    checked={formData.gratis}
+                    onCheckedChange={(checked) => handleChange("gratis", checked)}
+                  />
+                  <Label htmlFor="gratis" className="cursor-pointer">Gratis</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="pagoAutomatico"
+                    checked={formData.pagoAutomatico}
+                    onCheckedChange={(checked) => handleChange("pagoAutomatico", checked)}
+                  />
+                  <Label htmlFor="pagoAutomatico" className="cursor-pointer">Pago Automático</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="envioFacturaAuto"
+                    checked={formData.envioFacturaAuto}
+                    onCheckedChange={(checked) => handleChange("envioFacturaAuto", checked)}
+                  />
+                  <Label htmlFor="envioFacturaAuto" className="cursor-pointer">Envío Factura Auto</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="envioReciboPagoAuto"
+                    checked={formData.envioReciboPagoAuto}
+                    onCheckedChange={(checked) => handleChange("envioReciboPagoAuto", checked)}
+                  />
+                  <Label htmlFor="envioReciboPagoAuto" className="cursor-pointer">Envío Recibo Auto</Label>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Control y Gestión */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Control y Gestión</CardTitle>
+              <CardDescription>
+                Opciones de control del cliente
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="bloquear"
+                    checked={formData.bloquear}
+                    onCheckedChange={(checked) => handleChange("bloquear", checked)}
+                  />
+                  <Label htmlFor="bloquear" className="cursor-pointer">Bloquear</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="preAviso"
+                    checked={formData.preAviso}
+                    onCheckedChange={(checked) => handleChange("preAviso", checked)}
+                  />
+                  <Label htmlFor="preAviso" className="cursor-pointer">Pre Aviso</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="proxMes"
+                    checked={formData.proxMes}
+                    onCheckedChange={(checked) => handleChange("proxMes", checked)}
+                  />
+                  <Label htmlFor="proxMes" className="cursor-pointer">Próximo Mes</Label>
                 </div>
               </div>
             </CardContent>
@@ -298,15 +678,16 @@ export default function NuevoCliente() {
             </CardHeader>
             <CardContent>
               <Textarea
+                id="observaciones"
                 value={formData.observaciones}
                 onChange={(e) => handleChange("observaciones", e.target.value)}
-                placeholder="Escribe aquí cualquier información adicional..."
                 rows={4}
+                placeholder="Escribe cualquier información adicional relevante..."
               />
             </CardContent>
           </Card>
 
-          {/* Botones */}
+          {/* Botones de Acción */}
           <div className="flex justify-end gap-4">
             <Link href="/clientes">
               <Button type="button" variant="outline">

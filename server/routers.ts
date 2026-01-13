@@ -52,18 +52,54 @@ const clientesRouter = router({
   create: protectedProcedure
     .input(z.object({
       // Datos personales
+      codigo: z.string().optional(),
       nombre: z.string().min(1),
       apellidos: z.string().optional(),
+      tipoCliente: z.string().optional(),
+      tipoId: z.string().optional(),
       dni: z.string().optional(),
-      email: z.string().email().optional(),
+      email: z.string().email().optional().or(z.literal('')),
       telefono: z.string().optional(),
       telefonoAlternativo: z.string().optional(),
+      numero: z.string().optional(),
+      contacto: z.string().optional(),
       
       // Dirección
       direccion: z.string().min(1),
+      domicilioFiscal: z.string().optional(),
+      calle1: z.string().optional(),
+      calle2: z.string().optional(),
       codigoPostal: z.string().optional(),
       localidad: z.string().min(1),
       provincia: z.string().optional(),
+      latitud: z.string().optional(),
+      longitud: z.string().optional(),
+      extra1: z.string().optional(),
+      extra2: z.string().optional(),
+      
+      // Datos comerciales
+      medioPago: z.string().optional(),
+      cobrador: z.string().optional(),
+      vendedor: z.string().optional(),
+      contrato: z.boolean().optional(),
+      tipoContrato: z.string().optional(),
+      fechaVencimiento: z.string().optional(),
+      
+      // Datos financieros
+      gratis: z.boolean().optional(),
+      recuperacion: z.string().optional(),
+      cbu: z.string().optional(),
+      tarjetaCredito: z.string().optional(),
+      pagoAutomatico: z.boolean().optional(),
+      
+      // Configuración
+      envioFacturaAuto: z.boolean().optional(),
+      envioReciboPagoAuto: z.boolean().optional(),
+      bloquear: z.boolean().optional(),
+      preAviso: z.boolean().optional(),
+      terVenc: z.number().optional(),
+      proxMes: z.boolean().optional(),
+      actividadComercial: z.string().optional(),
       
       // Datos técnicos
       numeroSerieONT: z.string().optional(),
@@ -91,6 +127,7 @@ const clientesRouter = router({
       // Crear cliente en base de datos
       const clienteData = {
         ...input,
+        fechaVencimiento: input.fechaVencimiento ? new Date(input.fechaVencimiento) : undefined,
         estado: (input.activarEnPSO && input.numeroSerieONT ? 'activo' : 'pendiente_instalacion') as 'activo' | 'suspendido' | 'baja' | 'pendiente_instalacion',
         creadoPor: ctx.user.id,
       };

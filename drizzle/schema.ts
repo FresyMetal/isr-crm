@@ -33,21 +33,34 @@ export const clientes = mysqlTable("clientes", {
   id: int("id").autoincrement().primaryKey(),
   
   // Datos personales
+  codigo: varchar("codigo", { length: 50 }).unique(),
   nombre: varchar("nombre", { length: 255 }).notNull(),
   apellidos: varchar("apellidos", { length: 255 }),
+  tipoCliente: varchar("tipo_cliente", { length: 50 }),
+  tipoId: varchar("tipo_id", { length: 20 }),
   dni: varchar("dni", { length: 20 }),
   email: varchar("email", { length: 320 }),
   telefono: varchar("telefono", { length: 20 }),
   telefonoAlternativo: varchar("telefono_alternativo", { length: 20 }),
+  numero: varchar("numero", { length: 20 }),
+  contacto: varchar("contacto", { length: 255 }),
   
   // Dirección de instalación
   direccion: text("direccion").notNull(),
+  calle1: varchar("calle1", { length: 255 }),
+  calle2: varchar("calle2", { length: 255 }),
+  domicilio: text("domicilio"),
   codigoPostal: varchar("codigo_postal", { length: 10 }),
   localidad: varchar("localidad", { length: 255 }).notNull(),
   provincia: varchar("provincia", { length: 255 }),
+  latitud: varchar("latitud", { length: 50 }),
+  longitud: varchar("longitud", { length: 50 }),
+  extra1: varchar("extra1", { length: 255 }),
+  extra2: varchar("extra2", { length: 255 }),
   
   // Datos de facturación (si diferentes)
   direccionFacturacion: text("direccion_facturacion"),
+  domicilioFiscal: text("domicilio_fiscal"),
   
   // Datos técnicos GPON
   numeroSerieONT: varchar("numero_serie_ont", { length: 50 }).unique(),
@@ -73,6 +86,32 @@ export const clientes = mysqlTable("clientes", {
   numeroCuenta: varchar("numero_cuenta", { length: 50 }),
   fechaInstalacion: timestamp("fecha_instalacion"),
   observaciones: text("observaciones"),
+  
+  // Datos comerciales
+  medioPago: varchar("medio_pago", { length: 50 }),
+  cobrador: varchar("cobrador", { length: 255 }),
+  vendedor: varchar("vendedor", { length: 255 }),
+  contrato: boolean("contrato").default(false),
+  tipoContrato: varchar("tipo_contrato", { length: 100 }),
+  fechaVencimiento: timestamp("fecha_vencimiento"),
+  
+  // Datos financieros
+  gratis: boolean("gratis").default(false),
+  recuperacion: varchar("recuperacion", { length: 255 }),
+  cbu: varchar("cbu", { length: 50 }),
+  tarjetaCredito: varchar("tarjeta_credito", { length: 100 }),
+  pagoAutomatico: boolean("pago_automatico").default(false),
+  
+  // Configuración de envíos
+  envioFacturaAuto: boolean("envio_factura_auto").default(false),
+  envioReciboPagoAuto: boolean("envio_recibo_pago_auto").default(false),
+  
+  // Control y gestión
+  bloquear: boolean("bloquear").default(false),
+  preAviso: boolean("pre_aviso").default(false),
+  terVenc: int("ter_venc").default(0),
+  proxMes: boolean("prox_mes").default(false),
+  actividadComercial: text("actividad_comercial"),
   
   // Metadatos
   creadoPor: int("creado_por"),
