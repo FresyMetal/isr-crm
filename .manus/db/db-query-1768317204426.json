@@ -1,0 +1,32 @@
+{
+  "query": "SELECT * FROM users;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user pn6kPt8nGx8NF8E.root --database jT3CCftZ3Y2M85YuSeeCP2 --execute SELECT * FROM users;",
+  "rows": [
+    {
+      "id": "1",
+      "openId": "27eBM9NYdKzg8SwNRbs6Np",
+      "name": "Nacho Sanchez",
+      "email": "fresymetal@gmail.com",
+      "loginMethod": "google",
+      "role": "admin",
+      "createdAt": "2026-01-07 14:19:03",
+      "updatedAt": "2026-01-13 15:13:19",
+      "lastSignedIn": "2026-01-13 15:13:19"
+    },
+    {
+      "id": "510798",
+      "openId": "admin",
+      "name": "Admin",
+      "email": "admin",
+      "loginMethod": "local",
+      "role": "admin",
+      "createdAt": "2026-01-13 15:08:19",
+      "updatedAt": "2026-01-13 15:10:35",
+      "lastSignedIn": "2026-01-13 10:10:35"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\topenId\tname\temail\tloginMethod\trole\tcreatedAt\tupdatedAt\tlastSignedIn\n1\t27eBM9NYdKzg8SwNRbs6Np\tNacho Sanchez\tfresymetal@gmail.com\tgoogle\tadmin\t2026-01-07 14:19:03\t2026-01-13 15:13:19\t2026-01-13 15:13:19\n510798\tadmin\tAdmin\tadmin\tlocal\tadmin\t2026-01-13 15:08:19\t2026-01-13 15:10:35\t2026-01-13 10:10:35\n",
+  "stderr": "",
+  "execution_time_ms": 54
+}

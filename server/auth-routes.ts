@@ -42,34 +42,47 @@ router.post("/login", async (req: Request, res: Response) => {
       return res.status(500).json({ message: "Base de datos no disponible" });
     }
 
-    // Usar INSERT ... ON DUPLICATE KEY UPDATE para evitar race conditions
     const now = new Date();
     const userName = username.charAt(0).toUpperCase() + username.slice(1);
     
-    try {
-      // Ejecutar INSERT con ON DUPLICATE KEY UPDATE
-      await db.execute(sql`
-        INSERT INTO users (openId, email, name, loginMethod, role, lastSignedIn)
-        VALUES (${username}, ${username}, ${userName}, 'local', 'admin', ${now})
-        ON DUPLICATE KEY UPDATE lastSignedIn = ${now}
-      `);
-    } catch (error: any) {
-      console.error('Error en INSERT/UPDATE:', error.message);
-      return res.status(500).json({ message: `Error al iniciar sesión: ${error.message}` });
-    }
-
-    // Obtener el usuario (ya sea recién creado o actualizado)
-    const userResult = await db
+    // Primero intentar obtener el usuario existente
+    let userResult = await db
       .select()
       .from(users)
       .where(eq(users.openId, username))
       .limit(1);
 
-    if (userResult.length === 0) {
-      return res.status(500).json({ message: 'No se pudo crear o encontrar el usuario' });
+    let user;
+    
+    if (userResult.length > 0) {
+      // Usuario existe, actualizar lastSignedIn
+      user = userResult[0];
+      await db
+        .update(users)
+        .set({ lastSignedIn: now })
+        .where(eq(users.id, user.id));
+    } else {
+      // Usuario no existe, crearlo
+      const insertResult = await db
+        .insert(users)
+        .values({
+          openId: username,
+          email: username,
+          name: userName,
+          loginMethod: 'local',
+          role: 'admin',
+          lastSignedIn: now,
+        });
+      
+      // Obtener el usuario recién creado
+      userResult = await db
+        .select()
+        .from(users)
+        .where(eq(users.openId, username))
+        .limit(1);
+      
+      user = userResult[0];
     }
-
-    const user = userResult[0];
 
     // Generar token
     const token = generateToken(user.id, user.email || username);
