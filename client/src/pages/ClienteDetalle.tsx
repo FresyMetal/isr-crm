@@ -20,6 +20,8 @@ import { Link, useParams } from "wouter";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
+import ClienteEditForm from "@/components/ClienteEditForm";
+import { Edit } from "lucide-react";
 
 const estadoLabels: Record<string, string> = {
   activo: "Activo",
@@ -42,6 +44,7 @@ export default function ClienteDetalle() {
   const [motivoBaja, setMotivoBaja] = useState("");
   const [editandoCuenta, setEditandoCuenta] = useState(false);
   const [numeroCuenta, setNumeroCuenta] = useState("");
+  const [modoEdicion, setModoEdicion] = useState(false);
 
   const utils = trpc.useUtils();
   const { data: cliente, isLoading } = trpc.clientes.getById.useQuery({ id: clienteId });
@@ -130,6 +133,12 @@ export default function ClienteDetalle() {
 
           {/* Acciones */}
           <div className="flex gap-2">
+            {!modoEdicion && (
+              <Button onClick={() => setModoEdicion(true)} variant="outline">
+                <Edit className="mr-2 h-4 w-4" />
+                Editar
+              </Button>
+            )}
             {cliente.estado === "activo" && (
               <AlertDialog>
                 <AlertDialogTrigger asChild>
@@ -212,6 +221,16 @@ export default function ClienteDetalle() {
           </div>
         </div>
 
+        {modoEdicion ? (
+          <ClienteEditForm
+            cliente={cliente}
+            onCancel={() => setModoEdicion(false)}
+            onSuccess={() => {
+              setModoEdicion(false);
+              utils.clientes.getById.invalidate({ id: clienteId });
+            }}
+          />
+        ) : (
         <Tabs defaultValue="info" className="space-y-6">
           <TabsList>
             <TabsTrigger value="info">
@@ -437,6 +456,7 @@ export default function ClienteDetalle() {
             </Card>
           </TabsContent>
         </Tabs>
+        )}
       </div>
     </DashboardLayout>
   );

@@ -133,7 +133,18 @@ const clientesRouter = router({
       };
 
       const result = await db.createCliente(clienteData);
-      const clienteId = Number((result as any).insertId);
+      // Obtener el ID del cliente recién creado
+      let clienteId: number;
+      if (typeof result === 'object' && result !== null && 'insertId' in result) {
+        clienteId = Number((result as any).insertId);
+      } else {
+        // Fallback: buscar el último cliente creado por este usuario
+        const ultimoCliente = await db.getUltimoClienteCreado(ctx.user.id);
+        if (!ultimoCliente) {
+          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'No se pudo obtener el ID del cliente creado' });
+        }
+        clienteId = ultimoCliente.id;
+      }
 
         // Si se debe activar en PSO y tenemos número de serie
         if (input.activarEnPSO && input.numeroSerieONT && input.olt && input.pon) {
@@ -209,20 +220,75 @@ const clientesRouter = router({
     .input(z.object({
       id: z.number(),
       data: z.object({
+        // Datos básicos
+        codigo: z.string().optional(),
         nombre: z.string().optional(),
         apellidos: z.string().optional(),
+        tipoCliente: z.string().optional(),
+        tipoId: z.string().optional(),
         dni: z.string().optional(),
         email: z.string().email().optional(),
         telefono: z.string().optional(),
+        telefonoAlternativo: z.string().optional(),
+        numero: z.string().optional(),
+        contacto: z.string().optional(),
+        
+        // Dirección
         direccion: z.string().optional(),
+        domicilioFiscal: z.string().optional(),
+        calle1: z.string().optional(),
+        calle2: z.string().optional(),
+        codigoPostal: z.string().optional(),
         localidad: z.string().optional(),
-        observaciones: z.string().optional(),
+        provincia: z.string().optional(),
+        latitud: z.string().optional(),
+        longitud: z.string().optional(),
+        extra1: z.string().optional(),
+        extra2: z.string().optional(),
+        
+        // Datos comerciales
+        medioPago: z.string().optional(),
+        cobrador: z.string().optional(),
+        vendedor: z.string().optional(),
+        contrato: z.boolean().optional(),
+        tipoContrato: z.string().optional(),
+        fechaVencimiento: z.string().optional(),
+        
+        // Datos financieros
+        gratis: z.boolean().optional(),
+        recuperacion: z.string().optional(),
+        cbu: z.string().optional(),
+        tarjetaCredito: z.string().optional(),
+        pagoAutomatico: z.boolean().optional(),
+        
+        // Configuración
+        envioFacturaAuto: z.boolean().optional(),
+        envioReciboPagoAuto: z.boolean().optional(),
+        bloquear: z.boolean().optional(),
+        preAviso: z.boolean().optional(),
+        terVenc: z.number().optional(),
+        proxMes: z.boolean().optional(),
+        actividadComercial: z.string().optional(),
+        
+        // Técnicos
+        numeroSerieONT: z.string().optional(),
+        modeloONT: z.string().optional(),
+        olt: z.string().optional(),
+        pon: z.string().optional(),
+        
+        // Plan y otros
+        planId: z.number().optional(),
         numeroCuenta: z.string().optional(),
         precioMensual: z.string().optional(),
+        observaciones: z.string().optional(),
       }),
     }))
     .mutation(async ({ input, ctx }) => {
-      await db.updateCliente(input.id, input.data);
+      const dataToUpdate = {
+        ...input.data,
+        fechaVencimiento: input.data.fechaVencimiento ? new Date(input.data.fechaVencimiento) : undefined,
+      };
+      await db.updateCliente(input.id, dataToUpdate);
       
       await db.createActividadCliente({
         clienteId: input.id,
