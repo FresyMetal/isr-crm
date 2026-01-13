@@ -19,19 +19,14 @@ import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 
 function Router() {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-
-  // Si no hay token, mostrar login
-  if (!token) {
-    return (
-      <Switch>
-        <Route path={"/*"} component={Login} />
-      </Switch>
-    );
-  }
-
+  // No verificar token en localStorage, el backend maneja la autenticación con cookies
+  // Si el usuario no está autenticado, el backend devolverá 401 y main.tsx redirigirá al login
+  
   return (
     <Switch>
+      {/* Ruta de login */}
+      <Route path={"/login"} component={Login} />
+      
       {/* Dashboard principal */}
       <Route path={"/"} component={Dashboard} />
       
