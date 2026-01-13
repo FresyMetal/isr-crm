@@ -212,3 +212,10 @@
 - [x] Mostrar contador de resultados filtrados
 - [x] Integrar filtros en página de clientes
 - [x] Probar combinaciones de filtros
+
+## Gestión de Planes - Mejoras (Nueva Solicitud)
+- [x] Crear script de seed con planes de ejemplo de fibra óptica
+- [x] Mejorar interfaz de gestión de planes con formularios de creación
+- [x] Implementar edición de planes existentes
+- [x] Añadir validaciones en formularios de planes
+- [x] Probar creación y edición de planes
