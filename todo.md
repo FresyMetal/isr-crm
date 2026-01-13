@@ -270,3 +270,11 @@
 - [x] Crear mecanismo de limpieza automática en el login
 - [x] Modificar Login.tsx para limpiar localStorage al cargar la página
 - [x] Ahora el login limpia automáticamente datos antiguos
+
+## CRÍTICO: Error de Inserción Duplicada - RESUELTO DEFINITIVAMENTE
+- [x] Usuario reporta error: "Failed query: insert into users... admin,Admin,admin,local,admin"
+- [x] Ocurre en navegadores diferentes (no es problema de caché)
+- [x] Eliminados todos los usuarios de la base de datos
+- [x] Reescrita completamente la lógica de login usando INSERT ... ON DUPLICATE KEY UPDATE
+- [x] Probado exitosamente: login funciona correctamente
+- [x] Sesión se mantiene activa sin expiración prematura

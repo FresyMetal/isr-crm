@@ -1,0 +1,26 @@
+{
+  "query": "SELECT id, openId, name, email, role, createdAt FROM users ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user pn6kPt8nGx8NF8E.root --database jT3CCftZ3Y2M85YuSeeCP2 --execute SELECT id, openId, name, email, role, createdAt FROM users ORDER BY id;",
+  "rows": [
+    {
+      "id": "540012",
+      "openId": "27eBM9NYdKzg8SwNRbs6Np",
+      "name": "Nacho Sanchez",
+      "email": "fresymetal@gmail.com",
+      "role": "admin",
+      "createdAt": "2026-01-13 16:38:39"
+    },
+    {
+      "id": "540014",
+      "openId": "admin",
+      "name": "Admin",
+      "email": "admin",
+      "role": "admin",
+      "createdAt": "2026-01-13 16:39:30"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\topenId\tname\temail\trole\tcreatedAt\n540012\t27eBM9NYdKzg8SwNRbs6Np\tNacho Sanchez\tfresymetal@gmail.com\tadmin\t2026-01-13 16:38:39\n540014\tadmin\tAdmin\tadmin\tadmin\t2026-01-13 16:39:30\n",
+  "stderr": "",
+  "execution_time_ms": 68
+}

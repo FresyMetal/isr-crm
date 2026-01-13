@@ -2,7 +2,6 @@ import { Router, Request, Response } from "express";
 import { getDb } from "./db";
 import { eq, sql } from "drizzle-orm";
 import { users } from "../drizzle/schema";
-import crypto from "crypto";
 
 const router = Router();
 
@@ -45,44 +44,32 @@ router.post("/login", async (req: Request, res: Response) => {
     const now = new Date();
     const userName = username.charAt(0).toUpperCase() + username.slice(1);
     
-    // Primero intentar obtener el usuario existente
-    let userResult = await db
+    // Estrategia: Usar SQL raw con INSERT ... ON DUPLICATE KEY UPDATE
+    // Esto es atómico y evita race conditions
+    try {
+      await db.execute(sql`
+        INSERT INTO users (openId, name, email, loginMethod, role, lastSignedIn)
+        VALUES (${username}, ${userName}, ${username}, 'local', 'admin', ${now})
+        ON DUPLICATE KEY UPDATE
+          lastSignedIn = VALUES(lastSignedIn)
+      `);
+    } catch (insertError: any) {
+      console.error("Error en INSERT ON DUPLICATE KEY UPDATE:", insertError);
+      return res.status(500).json({ message: "Error al crear/actualizar usuario" });
+    }
+
+    // Obtener el usuario (ahora garantizado que existe)
+    const userResult = await db
       .select()
       .from(users)
       .where(eq(users.openId, username))
       .limit(1);
 
-    let user;
-    
-    if (userResult.length > 0) {
-      // Usuario existe, actualizar lastSignedIn
-      user = userResult[0];
-      await db
-        .update(users)
-        .set({ lastSignedIn: now })
-        .where(eq(users.id, user.id));
-    } else {
-      // Usuario no existe, crearlo
-      const insertResult = await db
-        .insert(users)
-        .values({
-          openId: username,
-          email: username,
-          name: userName,
-          loginMethod: 'local',
-          role: 'admin',
-          lastSignedIn: now,
-        });
-      
-      // Obtener el usuario recién creado
-      userResult = await db
-        .select()
-        .from(users)
-        .where(eq(users.openId, username))
-        .limit(1);
-      
-      user = userResult[0];
+    if (userResult.length === 0) {
+      return res.status(500).json({ message: "Error al obtener usuario después de crear/actualizar" });
     }
+
+    const user = userResult[0];
 
     // Generar token
     const token = generateToken(user.id, user.email || username);
