@@ -278,3 +278,9 @@
 - [x] Reescrita completamente la lógica de login usando INSERT ... ON DUPLICATE KEY UPDATE
 - [x] Probado exitosamente: login funciona correctamente
 - [x] Sesión se mantiene activa sin expiración prematura
+
+## Bug: Error 500 Internal Server Error al Intentar Iniciar Sesión
+- [ ] Usuario reporta error 500 al hacer POST a /api/auth/login
+- [ ] Revisar código de auth-routes.ts para identificar el error
+- [ ] Añadir manejo de errores y logging
+- [ ] Probar login exitoso

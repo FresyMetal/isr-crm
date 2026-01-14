@@ -1,65 +1,37 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { toast } from "sonner";
 import { Wifi } from "lucide-react";
+import { getLoginUrl } from "@/const";
+import { useAuth } from "@/_core/hooks/useAuth";
+import { useLocation } from "wouter";
 
 export default function Login() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const { isAuthenticated, loading } = useAuth();
+  const [, setLocation] = useLocation();
 
-  // Limpiar localStorage al cargar la página de login para evitar conflictos
+  // Si ya está autenticado, redirigir al dashboard
   useEffect(() => {
-    localStorage.clear();
-  }, []);
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!username || !password) {
-      toast.error("Por favor completa todos los campos");
-      return;
+    if (isAuthenticated && !loading) {
+      setLocation("/");
     }
+  }, [isAuthenticated, loading, setLocation]);
 
-    setIsLoading(true);
-
-    try {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({ username, password }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Error al iniciar sesión");
-      }
-
-      if (data.success && data.token) {
-        // Guardar token en localStorage
-        localStorage.setItem("auth_token", data.token);
-        
-        toast.success("Sesión iniciada correctamente");
-        
-        // Redirigir al dashboard después de un breve delay
-        setTimeout(() => {
-          window.location.href = "/";
-        }, 300);
-      } else {
-        throw new Error(data.message || "Error al iniciar sesión");
-      }
-    } catch (error: any) {
-      toast.error(error.message || "Error al iniciar sesión");
-    } finally {
-      setIsLoading(false);
-    }
+  const handleLogin = () => {
+    // Redirigir al portal OAuth de Manus
+    window.location.href = getLoginUrl();
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Verificando sesión...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
@@ -76,44 +48,18 @@ export default function Login() {
           </CardHeader>
           
           <CardContent>
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Usuario</label>
-                <Input
-                  type="text"
-                  placeholder="Ingresa tu usuario"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  disabled={isLoading}
-                  autoComplete="username"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Contraseña</label>
-                <Input
-                  type="password"
-                  placeholder="Ingresa tu contraseña"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  disabled={isLoading}
-                  autoComplete="current-password"
-                />
-              </div>
-
+            <div className="space-y-4">
               <Button 
-                type="submit" 
-                className="w-full" 
-                disabled={isLoading}
+                onClick={handleLogin}
+                className="w-full"
+                size="lg"
               >
-                {isLoading ? "Iniciando sesión..." : "Iniciar Sesión"}
+                Iniciar Sesión con Manus
               </Button>
-            </form>
 
-            <div className="mt-6 p-4 bg-blue-50 rounded-lg text-sm text-muted-foreground">
-              <p className="font-medium mb-2">Credenciales de prueba:</p>
-              <p>Usuario: <code className="bg-white px-2 py-1 rounded">admin</code></p>
-              <p>Contraseña: <code className="bg-white px-2 py-1 rounded">admin123</code></p>
+              <div className="text-center text-sm text-muted-foreground">
+                <p>Serás redirigido al portal seguro de autenticación</p>
+              </div>
             </div>
           </CardContent>
         </Card>

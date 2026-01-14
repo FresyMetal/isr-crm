@@ -49,6 +49,7 @@ export async function upsertUser(user: InsertUser): Promise<void> {
 
   try {
     console.log('[upsertUser] Starting with openId:', user.openId);
+    console.log('[upsertUser] Stack trace:', new Error().stack);
     
     // Buscar usuario existente primero
     const existing = await db

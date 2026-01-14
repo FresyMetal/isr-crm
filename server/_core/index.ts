@@ -6,7 +6,7 @@ import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
-import authRoutes from "../auth-routes";
+// authRoutes eliminado - usando solo OAuth
 import { serveStatic, setupVite } from "./vite";
 
 function isPortAvailable(port: number): Promise<boolean> {
@@ -36,8 +36,7 @@ async function startServer() {
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
   // OAuth callback under /api/oauth/callback
   registerOAuthRoutes(app);
-  // Auth routes (login, logout, me)
-  app.use("/api/auth", authRoutes);
+  // Auth routes eliminadas - usando solo OAuth de Manus
   // tRPC API
   app.use(
     "/api/trpc",

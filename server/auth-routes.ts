@@ -25,25 +25,32 @@ function generateToken(userId: number, username: string): string {
  */
 router.post("/login", async (req: Request, res: Response) => {
   try {
+    console.log("[auth-routes] Login attempt:", { username: req.body.username });
     const { username, password } = req.body;
 
     if (!username || !password) {
+      console.log("[auth-routes] Missing credentials");
       return res.status(400).json({ message: "Usuario y contraseña requeridos" });
     }
 
     // Verificar contraseña (para demo, aceptamos "admin123" para cualquier usuario)
     if (password !== "admin123") {
+      console.log("[auth-routes] Invalid password");
       return res.status(401).json({ message: "Usuario o contraseña incorrectos" });
     }
 
+    console.log("[auth-routes] Getting database connection...");
     const db = await getDb();
     if (!db) {
+      console.log("[auth-routes] Database not available");
       return res.status(500).json({ message: "Base de datos no disponible" });
     }
+    console.log("[auth-routes] Database connection OK");
 
     const now = new Date();
     const userName = username.charAt(0).toUpperCase() + username.slice(1);
     
+    console.log("[auth-routes] Searching for existing user...");
     // SOLUCIÓN SIMPLE: Buscar primero, luego actualizar o crear
     const existingUsers = await db
       .select()
@@ -51,18 +58,22 @@ router.post("/login", async (req: Request, res: Response) => {
       .where(eq(users.openId, username))
       .limit(1);
 
+    console.log("[auth-routes] Existing users found:", existingUsers.length);
     let user;
     
     if (existingUsers.length > 0) {
       // Usuario existe: actualizar lastSignedIn
+      console.log("[auth-routes] Updating existing user...");
       await db
         .update(users)
         .set({ lastSignedIn: now })
         .where(eq(users.openId, username));
       
       user = existingUsers[0];
+      console.log("[auth-routes] User updated successfully");
     } else {
       // Usuario no existe: crear nuevo
+      console.log("[auth-routes] Creating new user...");
       const result = await db.insert(users).values({
         openId: username,
         name: userName,
@@ -72,6 +83,7 @@ router.post("/login", async (req: Request, res: Response) => {
         lastSignedIn: now,
       });
       
+      console.log("[auth-routes] User created, fetching...");
       // Obtener el usuario recién creado
       const newUsers = await db
         .select()
@@ -80,15 +92,19 @@ router.post("/login", async (req: Request, res: Response) => {
         .limit(1);
       
       user = newUsers[0];
+      console.log("[auth-routes] New user fetched successfully");
     }
 
     if (!user) {
+      console.log("[auth-routes] ERROR: User is null/undefined");
       return res.status(500).json({ message: "Error al obtener usuario" });
     }
 
+    console.log("[auth-routes] Generating token for user:", user.id);
     // Generar token
     const token = generateToken(user.id, user.email || username);
 
+    console.log("[auth-routes] Login successful, sending response");
     return res.json({
       success: true,
       token,
@@ -100,7 +116,8 @@ router.post("/login", async (req: Request, res: Response) => {
       },
     });
   } catch (error: any) {
-    console.error("Error en login:", error);
+    console.error("[auth-routes] ERROR in login:", error);
+    console.error("[auth-routes] Error stack:", error.stack);
     res.status(500).json({ message: "Error al iniciar sesión: " + error.message });
   }
 });
