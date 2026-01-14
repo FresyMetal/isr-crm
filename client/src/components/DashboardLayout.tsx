@@ -18,6 +18,7 @@ import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { FileText, AlertCircle, Phone, TrendingUp } from "lucide-react";
 
+// Sin autenticación
 const menuItems = [
   { icon: TrendingUp, label: "Dashboard", path: "/" },
   { icon: Users, label: "Clientes", path: "/clientes" },

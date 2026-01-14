@@ -284,3 +284,13 @@
 - [ ] Revisar código de auth-routes.ts para identificar el error
 - [ ] Añadir manejo de errores y logging
 - [ ] Probar login exitoso
+
+
+## URGENTE: Eliminar TODA la Autenticación del Sistema
+- [x] Eliminar archivos de autenticación del servidor (oauth.ts, auth-routes.ts, auth-service.ts, sdk.ts)
+- [x] Eliminar archivos de autenticación del cliente (useAuth.ts, ManusDialog.tsx, getLoginUrl de const.ts)
+- [x] Eliminar todas las referencias a OAuth del servidor principal
+- [x] Simplificar contexto de tRPC para no usar ningún sistema de autenticación
+- [ ] Eliminar tabla de users de la base de datos
+- [x] Procedimientos auth.me y auth.logout simplificados (sin cookies)
+- [x] Probar todas las páginas para verificar que no hay redirecciones a login
