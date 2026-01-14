@@ -48,47 +48,53 @@ export async function upsertUser(user: InsertUser): Promise<void> {
   }
 
   try {
-    const values: InsertUser = {
-      openId: user.openId,
-    };
-    const updateSet: Record<string, unknown> = {};
+    console.log('[upsertUser] Starting with openId:', user.openId);
+    
+    // Buscar usuario existente primero
+    const existing = await db
+      .select()
+      .from(users)
+      .where(eq(users.openId, user.openId))
+      .limit(1);
 
-    const textFields = ["name", "email", "loginMethod"] as const;
-    type TextField = (typeof textFields)[number];
+    console.log('[upsertUser] Found existing users:', existing.length);
 
-    const assignNullable = (field: TextField) => {
-      const value = user[field];
-      if (value === undefined) return;
-      const normalized = value ?? null;
-      values[field] = normalized;
-      updateSet[field] = normalized;
-    };
+    if (existing.length > 0) {
+      // Usuario existe: actualizar solo los campos proporcionados
+      const updateSet: Record<string, unknown> = {};
 
-    textFields.forEach(assignNullable);
+      if (user.name !== undefined) updateSet.name = user.name;
+      if (user.email !== undefined) updateSet.email = user.email;
+      if (user.loginMethod !== undefined) updateSet.loginMethod = user.loginMethod;
+      if (user.lastSignedIn !== undefined) updateSet.lastSignedIn = user.lastSignedIn;
+      if (user.role !== undefined) updateSet.role = user.role;
 
-    if (user.lastSignedIn !== undefined) {
-      values.lastSignedIn = user.lastSignedIn;
-      updateSet.lastSignedIn = user.lastSignedIn;
+      // Si no hay campos para actualizar, al menos actualizar lastSignedIn
+      if (Object.keys(updateSet).length === 0) {
+        updateSet.lastSignedIn = new Date();
+      }
+
+      console.log('[upsertUser] Updating user with:', updateSet);
+      await db
+        .update(users)
+        .set(updateSet)
+        .where(eq(users.openId, user.openId));
+      console.log('[upsertUser] Update successful');
+    } else {
+      // Usuario no existe: crear nuevo
+      const values: InsertUser = {
+        openId: user.openId,
+        name: user.name ?? null,
+        email: user.email ?? null,
+        loginMethod: user.loginMethod ?? null,
+        role: user.role ?? (user.openId === ENV.ownerOpenId ? 'admin' : 'user'),
+        lastSignedIn: user.lastSignedIn ?? new Date(),
+      };
+
+      console.log('[upsertUser] Inserting new user with values:', values);
+      await db.insert(users).values(values);
+      console.log('[upsertUser] Insert successful');
     }
-    if (user.role !== undefined) {
-      values.role = user.role;
-      updateSet.role = user.role;
-    } else if (user.openId === ENV.ownerOpenId) {
-      values.role = 'admin';
-      updateSet.role = 'admin';
-    }
-
-    if (!values.lastSignedIn) {
-      values.lastSignedIn = new Date();
-    }
-
-    if (Object.keys(updateSet).length === 0) {
-      updateSet.lastSignedIn = new Date();
-    }
-
-    await db.insert(users).values(values).onDuplicateKeyUpdate({
-      set: updateSet,
-    });
   } catch (error) {
     console.error("[Database] Failed to upsert user:", error);
     throw error;

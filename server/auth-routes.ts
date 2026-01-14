@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 import { getDb } from "./db";
-import { eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { users } from "../drizzle/schema";
 
 const router = Router();
@@ -44,32 +44,47 @@ router.post("/login", async (req: Request, res: Response) => {
     const now = new Date();
     const userName = username.charAt(0).toUpperCase() + username.slice(1);
     
-    // Estrategia: Usar SQL raw con INSERT ... ON DUPLICATE KEY UPDATE
-    // Esto es atómico y evita race conditions
-    try {
-      await db.execute(sql`
-        INSERT INTO users (openId, name, email, loginMethod, role, lastSignedIn)
-        VALUES (${username}, ${userName}, ${username}, 'local', 'admin', ${now})
-        ON DUPLICATE KEY UPDATE
-          lastSignedIn = VALUES(lastSignedIn)
-      `);
-    } catch (insertError: any) {
-      console.error("Error en INSERT ON DUPLICATE KEY UPDATE:", insertError);
-      return res.status(500).json({ message: "Error al crear/actualizar usuario" });
-    }
-
-    // Obtener el usuario (ahora garantizado que existe)
-    const userResult = await db
+    // SOLUCIÓN SIMPLE: Buscar primero, luego actualizar o crear
+    const existingUsers = await db
       .select()
       .from(users)
       .where(eq(users.openId, username))
       .limit(1);
 
-    if (userResult.length === 0) {
-      return res.status(500).json({ message: "Error al obtener usuario después de crear/actualizar" });
+    let user;
+    
+    if (existingUsers.length > 0) {
+      // Usuario existe: actualizar lastSignedIn
+      await db
+        .update(users)
+        .set({ lastSignedIn: now })
+        .where(eq(users.openId, username));
+      
+      user = existingUsers[0];
+    } else {
+      // Usuario no existe: crear nuevo
+      const result = await db.insert(users).values({
+        openId: username,
+        name: userName,
+        email: username,
+        loginMethod: 'local',
+        role: 'admin',
+        lastSignedIn: now,
+      });
+      
+      // Obtener el usuario recién creado
+      const newUsers = await db
+        .select()
+        .from(users)
+        .where(eq(users.openId, username))
+        .limit(1);
+      
+      user = newUsers[0];
     }
 
-    const user = userResult[0];
+    if (!user) {
+      return res.status(500).json({ message: "Error al obtener usuario" });
+    }
 
     // Generar token
     const token = generateToken(user.id, user.email || username);
@@ -95,7 +110,6 @@ router.post("/login", async (req: Request, res: Response) => {
  * Cerrar sesión
  */
 router.post("/logout", (req: Request, res: Response) => {
-  // En un sistema con tokens, el logout se maneja en el cliente
   res.json({ success: true, message: "Sesión cerrada" });
 });
 

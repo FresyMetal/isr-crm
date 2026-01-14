@@ -32,15 +32,20 @@ export async function registerUser(
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
-  // Verificar que el usuario no exista
+  // Verificar que el usuario no exista (buscar por openId que es único)
   const existingUser = await db
     .select()
     .from(users)
-    .where(eq(users.email, username))
+    .where(eq(users.openId, username))
     .limit(1);
 
   if (existingUser.length > 0) {
-    throw new Error("El usuario ya existe");
+    // Usuario ya existe, actualizar lastSignedIn y devolver
+    await db
+      .update(users)
+      .set({ lastSignedIn: new Date() })
+      .where(eq(users.openId, username));
+    return existingUser[0];
   }
 
   // Crear usuario con openId como username
@@ -51,7 +56,7 @@ export async function registerUser(
     email: username,
     name: name || username,
     loginMethod: "local",
-    role: "user",
+    role: "admin", // Cambiar a admin para que funcione con el login
     lastSignedIn: new Date(),
   });
 
