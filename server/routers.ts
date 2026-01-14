@@ -1,7 +1,7 @@
 import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
-import { publicProcedure, router, protectedProcedure } from "./_core/trpc";
+import { publicProcedure, router } from "./_core/trpc";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import * as db from "./db";
@@ -14,7 +14,7 @@ import { getAllPlanesConContador, getPlanConContador, crearPlan, actualizarPlan,
 // MIDDLEWARE PARA ADMIN
 // ============================================================================
 
-const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
+const adminProcedure = publicProcedure.use(({ ctx, next }) => {
   if (ctx.user.role !== 'admin') {
     throw new TRPCError({ code: 'FORBIDDEN', message: 'Acceso denegado: se requiere rol de administrador' });
   }
@@ -27,7 +27,7 @@ const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
 
 const clientesRouter = router({
   // Listar todos los clientes con filtros opcionales
-  list: protectedProcedure
+  list: publicProcedure
     .input(z.object({
       estado: z.string().optional(),
       localidad: z.string().optional(),
@@ -47,7 +47,7 @@ const clientesRouter = router({
     }),
 
   // Verificar si un código ya existe
-  checkCodigoExists: protectedProcedure
+  checkCodigoExists: publicProcedure
     .input(z.object({ 
       codigo: z.string(),
       excludeId: z.number().optional() // Para excluir el cliente actual al editar
@@ -66,7 +66,7 @@ const clientesRouter = router({
     }),
 
   // Obtener cliente por ID
-  getById: protectedProcedure
+  getById: publicProcedure
     .input(z.object({ id: z.number() }))
     .query(async ({ input }) => {
       const cliente = await db.getClienteById(input.id);
@@ -77,7 +77,7 @@ const clientesRouter = router({
     }),
 
   // Crear nuevo cliente con integración PSO
-  create: protectedProcedure
+  create: publicProcedure
     .input(z.object({
       // Datos personales
       codigo: z.string().optional(),
@@ -270,7 +270,7 @@ const clientesRouter = router({
     }),
 
   // Actualizar cliente
-  update: protectedProcedure
+  update: publicProcedure
     .input(z.object({
       id: z.number(),
       data: z.object({
@@ -373,7 +373,7 @@ const clientesRouter = router({
     }),
 
   // Suspender servicio
-  suspend: protectedProcedure
+  suspend: publicProcedure
     .input(z.object({
       id: z.number(),
       motivo: z.string(),
@@ -415,7 +415,7 @@ const clientesRouter = router({
     }),
 
   // Reactivar servicio
-  reactivate: protectedProcedure
+  reactivate: publicProcedure
     .input(z.object({ id: z.number() }))
     .mutation(async ({ input, ctx }) => {
       const cliente = await db.getClienteById(input.id);
@@ -457,7 +457,7 @@ const clientesRouter = router({
     }),
 
   // Dar de baja cliente
-  deactivate: protectedProcedure
+  deactivate: publicProcedure
     .input(z.object({
       id: z.number(),
       motivo: z.string(),
@@ -495,14 +495,14 @@ const clientesRouter = router({
     }),
 
   // Obtener actividad del cliente
-  getActivity: protectedProcedure
+  getActivity: publicProcedure
     .input(z.object({ id: z.number() }))
     .query(async ({ input }) => {
       return db.getActividadesCliente(input.id);
     }),
 
   // Calcular prorrateo para cambio de plan
-  calcularProrrateo: protectedProcedure
+  calcularProrrateo: publicProcedure
     .input(z.object({
       clienteId: z.number(),
       nuevoPlanId: z.number(),
@@ -564,7 +564,7 @@ const clientesRouter = router({
     }),
 
   // Cambiar plan del cliente
-  cambiarPlan: protectedProcedure
+  cambiarPlan: publicProcedure
     .input(z.object({
       clienteId: z.number(),
       nuevoPlanId: z.number(),
@@ -694,7 +694,7 @@ const clientesRouter = router({
     }),
 
   // Obtener historial de cambios de plan
-  getHistorialCambiosPlan: protectedProcedure
+  getHistorialCambiosPlan: publicProcedure
     .input(z.object({ clienteId: z.number() }))
     .query(async ({ input }) => {
       return db.getHistorialCambiosPlanCliente(input.clienteId);
@@ -707,7 +707,7 @@ const clientesRouter = router({
 
 const planesRouter = router({
   // Listar todos los planes con contador de clientes
-  list: protectedProcedure
+  list: publicProcedure
     .input(z.object({ activosOnly: z.boolean().optional() }).optional())
     .query(async ({ input }) => {
       if (input?.activosOnly) {
@@ -717,7 +717,7 @@ const planesRouter = router({
     }),
 
   // Obtener plan por ID con contador
-  getById: protectedProcedure
+  getById: publicProcedure
     .input(z.object({ id: z.number() }))
     .query(async ({ input }) => {
       const plan = await getPlanConContador(input.id);
@@ -728,7 +728,7 @@ const planesRouter = router({
     }),
 
   // Obtener estadísticas de planes
-  estadisticas: protectedProcedure
+  estadisticas: publicProcedure
     .query(async () => {
       return getEstadisticasPlanes();
     }),
@@ -787,7 +787,7 @@ const planesRouter = router({
 // ============================================================================
 
 const facturasRouter = router({
-  list: protectedProcedure
+  list: publicProcedure
     .input(z.object({ clienteId: z.number().optional() }).optional())
     .query(async ({ input }) => {
       if (input?.clienteId) {
@@ -797,7 +797,7 @@ const facturasRouter = router({
       return db.getFacturasPendientes();
     }),
 
-  getById: protectedProcedure
+  getById: publicProcedure
     .input(z.object({ id: z.number() }))
     .query(async ({ input }) => {
       const factura = await db.getFacturaById(input.id);
@@ -811,7 +811,7 @@ const facturasRouter = router({
       return { ...factura, conceptos, pagos };
     }),
 
-  registrarPago: protectedProcedure
+  registrarPago: publicProcedure
     .input(z.object({
       facturaId: z.number(),
       importe: z.string(),
@@ -877,7 +877,7 @@ const facturasRouter = router({
       return resultado;
     }),
 
-  obtenerProximoMes: protectedProcedure
+  obtenerProximoMes: publicProcedure
     .query(() => {
       return obtenerProximoMesFacturacion();
     }),
@@ -888,7 +888,7 @@ const facturasRouter = router({
 // ============================================================================
 
 const ticketsRouter = router({
-  list: protectedProcedure
+  list: publicProcedure
     .input(z.object({ 
       clienteId: z.number().optional(),
       abiertosOnly: z.boolean().optional(),
@@ -903,7 +903,7 @@ const ticketsRouter = router({
       return db.getTicketsAbiertos(); // Por defecto mostrar abiertos
     }),
 
-  getById: protectedProcedure
+  getById: publicProcedure
     .input(z.object({ id: z.number() }))
     .query(async ({ input }) => {
       const ticket = await db.getTicketById(input.id);
@@ -916,7 +916,7 @@ const ticketsRouter = router({
       return { ...ticket, comentarios };
     }),
 
-  create: protectedProcedure
+  create: publicProcedure
     .input(z.object({
       clienteId: z.number(),
       asunto: z.string().min(1),
@@ -937,7 +937,7 @@ const ticketsRouter = router({
       return { success: true };
     }),
 
-  addComment: protectedProcedure
+  addComment: publicProcedure
     .input(z.object({
       ticketId: z.number(),
       comentario: z.string().min(1),
@@ -954,7 +954,7 @@ const ticketsRouter = router({
       return { success: true };
     }),
 
-  updateStatus: protectedProcedure
+  updateStatus: publicProcedure
     .input(z.object({
       id: z.number(),
       estado: z.enum(['abierto', 'en_proceso', 'pendiente_cliente', 'resuelto', 'cerrado']),
@@ -993,7 +993,7 @@ const ticketsRouter = router({
     }),
 
   // Operaciones remotas PSO desde ticket
-  reiniciarONT: protectedProcedure
+  reiniciarONT: publicProcedure
     .input(z.object({ ticketId: z.number() }))
     .mutation(async ({ input, ctx }) => {
       const ticket = await db.getTicketById(input.ticketId);
@@ -1031,7 +1031,7 @@ const ticketsRouter = router({
 // ============================================================================
 
 const leadsRouter = router({
-  list: protectedProcedure
+  list: publicProcedure
     .input(z.object({
       estado: z.string().optional(),
       asignadoA: z.number().optional(),
@@ -1040,7 +1040,7 @@ const leadsRouter = router({
       return db.getAllLeads(input);
     }),
 
-  getById: protectedProcedure
+  getById: publicProcedure
     .input(z.object({ id: z.number() }))
     .query(async ({ input }) => {
       const lead = await db.getLeadById(input.id);
@@ -1050,7 +1050,7 @@ const leadsRouter = router({
       return lead;
     }),
 
-  create: protectedProcedure
+  create: publicProcedure
     .input(z.object({
       nombre: z.string().min(1),
       apellidos: z.string().optional(),
@@ -1078,7 +1078,7 @@ const leadsRouter = router({
       return { success: true };
     }),
 
-  update: protectedProcedure
+  update: publicProcedure
     .input(z.object({
       id: z.number(),
       data: z.object({
@@ -1092,7 +1092,7 @@ const leadsRouter = router({
       return { success: true };
     }),
 
-  convertToClient: protectedProcedure
+  convertToClient: publicProcedure
     .input(z.object({ id: z.number() }))
     .mutation(async ({ input, ctx }) => {
       const lead = await db.getLeadById(input.id);
@@ -1116,17 +1116,17 @@ const leadsRouter = router({
 // ============================================================================
 
 const dashboardRouter = router({
-  getKPIs: protectedProcedure.query(async () => {
+  getKPIs: publicProcedure.query(async () => {
     return db.getKPIs();
   }),
 
-  getClientesPorMes: protectedProcedure
+  getClientesPorMes: publicProcedure
     .input(z.object({ meses: z.number().default(12) }))
     .query(async ({ input }) => {
       return db.getClientesPorMes(input.meses);
     }),
 
-  getIngresosMensuales: protectedProcedure
+  getIngresosMensuales: publicProcedure
     .input(z.object({ meses: z.number().default(12) }))
     .query(async ({ input }) => {
       return db.getIngresosMensuales(input.meses);

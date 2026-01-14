@@ -8,20 +8,35 @@ import { eq } from "drizzle-orm";
 export type TrpcContext = {
   req: CreateExpressContextOptions["req"];
   res: CreateExpressContextOptions["res"];
-  user: User | null;
+  user: User;
 };
 
 export async function createContext(
   opts: CreateExpressContextOptions
 ): Promise<TrpcContext> {
-  let user: User | null = null;
-
-  // Autenticación OAuth de Manus
-  try {
-    user = await sdk.authenticateRequest(opts.req);
-  } catch (error) {
-    // No autenticado - continuar sin usuario
-    user = null;
+  // Sin autenticación - crear usuario anónimo
+  const db = await getDb();
+  if (!db) {
+    throw new Error("Database not available");
+  }
+  const anonUser = await db.select().from(users).where(eq(users.email, "admin@isrcomunicaciones.es")).limit(1);
+  
+  let user: User;
+  if (anonUser.length > 0) {
+    user = anonUser[0];
+  } else {
+    // Si no existe el usuario admin, crear uno temporal
+    user = {
+      id: 1,
+      openId: "anon",
+      name: "Administrador",
+      email: "admin@isrcomunicaciones.es",
+      loginMethod: null,
+      role: "admin" as const,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      lastSignedIn: new Date(),
+    };
   }
 
   return {
