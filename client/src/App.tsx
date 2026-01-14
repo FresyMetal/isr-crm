@@ -1,3 +1,4 @@
+// Version 2.0 - Sin autenticación
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
