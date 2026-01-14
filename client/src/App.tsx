@@ -16,17 +16,10 @@ import Tickets from "./pages/Tickets";
 import TicketDetalle from "./pages/TicketDetalle";
 import Leads from "./pages/Leads";
 import Dashboard from "./pages/Dashboard";
-import Login from "./pages/Login";
 
 function Router() {
-  // No verificar token en localStorage, el backend maneja la autenticación con cookies
-  // Si el usuario no está autenticado, el backend devolverá 401 y main.tsx redirigirá al login
-  
   return (
     <Switch>
-      {/* Ruta de login */}
-      <Route path={"/login"} component={Login} />
-      
       {/* Dashboard principal */}
       <Route path={"/"} component={Dashboard} />
       
