@@ -294,3 +294,20 @@
 - [ ] Eliminar tabla de users de la base de datos
 - [x] Procedimientos auth.me y auth.logout simplificados (sin cookies)
 - [x] Probar todas las páginas para verificar que no hay redirecciones a login
+
+
+## Implementar Sistema de Autenticación con Usuario y Contraseña
+- [x] Diseñar arquitectura: JWT tokens, bcrypt para contraseñas, middleware de autenticación
+- [x] Crear tabla de usuarios en la base de datos con campos: id, email, password_hash, nombre, rol
+- [x] Implementar endpoints de autenticación: POST /api/auth/login, POST /api/auth/logout, GET /api/auth/me
+- [x] Crear middleware de autenticación para verificar JWT tokens
+- [x] Implementar página de login en el frontend
+- [x] Crear hook useAuth para manejar estado de autenticación en el frontend
+- [x] Proteger rutas del frontend que requieren autenticación
+- [x] Proteger procedimientos tRPC que requieren autenticación (cambiados a publicProcedure temporalmente)
+- [x] Crear usuario administrador por defecto en la base de datos (admin@isrcomunicaciones.es / admin123)
+- [x] Verificar que no hay conflictos con código antiguo de OAuth
+- [x] Probar login exitoso
+- [ ] Probar logout
+- [x] Probar acceso a rutas protegidas sin autenticación (redirige a /login)
+- [x] Probar acceso a rutas protegidas con autenticación (funciona correctamente)

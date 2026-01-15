@@ -86,7 +86,8 @@ export async function upsertUser(user: InsertUser): Promise<void> {
       const values: InsertUser = {
         openId: user.openId,
         name: user.name ?? null,
-        email: user.email ?? null,
+        email: user.email ?? "",
+        passwordHash: "",
         loginMethod: user.loginMethod ?? null,
         role: user.role ?? (user.openId === ENV.ownerOpenId ? 'admin' : 'user'),
         lastSignedIn: user.lastSignedIn ?? new Date(),

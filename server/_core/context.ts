@@ -16,6 +16,7 @@ export async function createContext(
     openId: "anon",
     name: "Administrador",
     email: "admin@isrcomunicaciones.es",
+    passwordHash: "",
     loginMethod: null,
     role: "admin" as const,
     createdAt: new Date(),

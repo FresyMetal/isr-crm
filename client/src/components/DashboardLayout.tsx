@@ -13,10 +13,12 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/useMobile";
-import { LayoutDashboard, PanelLeft, Users } from "lucide-react";
+import { LayoutDashboard, PanelLeft, Users, LogOut } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { FileText, AlertCircle, Phone, TrendingUp } from "lucide-react";
+import { useAuth } from "@/_core/hooks/useAuth";
+import { Button } from "@/components/ui/button";
 
 // Sin autenticación
 const menuItems = [
@@ -78,8 +80,7 @@ function DashboardLayoutContent({
   const sidebarRef = useRef<HTMLDivElement>(null);
   const activeMenuItem = menuItems.find(item => item.path === location);
   const isMobile = useIsMobile();
-
-  // Sin autenticación
+  const { user, logout } = useAuth();
 
   useEffect(() => {
     if (isCollapsed) {
@@ -168,11 +169,28 @@ function DashboardLayoutContent({
           </SidebarContent>
 
           <SidebarFooter className="p-3">
-            <div className="flex items-center gap-3 rounded-lg px-2 py-2">
-              <div className="text-sm text-muted-foreground">
-                ISR CRM v1.0
+            {!isCollapsed && user && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-3 rounded-lg px-2 py-2 border-t pt-3">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{user.nombre}</p>
+                    <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                  </div>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full justify-start"
+                  onClick={logout}
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Cerrar Sesión
+                </Button>
               </div>
-            </div>
+            )}
+            {isCollapsed && (
+              <div className="text-xs text-muted-foreground text-center">v1.0</div>
+            )}
           </SidebarFooter>
         </Sidebar>
         <div
