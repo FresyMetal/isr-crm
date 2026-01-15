@@ -311,3 +311,14 @@
 - [ ] Probar logout
 - [x] Probar acceso a rutas protegidas sin autenticación (redirige a /login)
 - [x] Probar acceso a rutas protegidas con autenticación (funciona correctamente)
+
+
+## CRÍTICO: Eliminar Sistema de Autenticación Implementado
+- [x] Eliminar archivo Login.tsx
+- [x] Eliminar archivo useAuth.ts
+- [x] Eliminar archivos auth-routes.ts y auth-utils.ts del servidor
+- [x] Restaurar App.tsx sin ProtectedRoute ni importación de Login
+- [x] Restaurar DashboardLayout sin useAuth ni botón de logout
+- [x] Eliminar registro de rutas de autenticación en server/_core/index.ts
+- [x] Cambiar todos los publicProcedure de vuelta si es necesario
+- [x] Probar TODAS las páginas para verificar que no hay redirecciones (Dashboard, Clientes, Planes, Facturas, Tickets, Leads)

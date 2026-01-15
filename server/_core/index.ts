@@ -6,7 +6,6 @@ import { createExpressMiddleware } from "@trpc/server/adapters/express";
 // OAuth eliminado
 import { appRouter } from "../routers";
 import { createContext } from "./context";
-import authRoutes from "../auth-routes.js";
 import { serveStatic, setupVite } from "./vite";
 
 function isPortAvailable(port: number): Promise<boolean> {
@@ -34,9 +33,6 @@ async function startServer() {
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
-  
-  // Auth routes
-  app.use("/api/auth", authRoutes);
   
   // tRPC API
   app.use(
