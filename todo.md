@@ -322,3 +322,15 @@
 - [x] Eliminar registro de rutas de autenticación en server/_core/index.ts
 - [x] Cambiar todos los publicProcedure de vuelta si es necesario
 - [x] Probar TODAS las páginas para verificar que no hay redirecciones (Dashboard, Clientes, Planes, Facturas, Tickets, Leads)
+
+
+## URGENTE: Encontrar código que redirige a /login
+- [x] Buscar todas las referencias a "/login" en el código del cliente (no se encontró ninguna)
+- [x] Buscar todas las referencias a "login" en el código del cliente (no se encontró ninguna)
+- [x] Buscar redirecciones en main.tsx (no hay redirecciones)
+- [x] Buscar redirecciones en App.tsx (no hay redirecciones)
+- [x] Buscar redirecciones en DashboardLayout.tsx (no hay redirecciones)
+- [x] Buscar redirecciones en todas las páginas (no hay redirecciones)
+- [x] Limpiar build compilado antiguo (rm -rf client/dist .vite node_modules/.vite)
+- [x] Reiniciar servidor para forzar rebuild completo
+- [x] Probar que el sistema funciona sin redirecciones (FUNCIONA CORRECTAMENTE)
